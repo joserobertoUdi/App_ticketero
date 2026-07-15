@@ -1,0 +1,44 @@
+{
+  "descripcion": "Endpoints de autenticación",
+  "login_request": {
+    "nombreUsuario": "ana.perez",
+    "password": "MiPassword123"
+  },
+  "login_response_exito": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "rt_abc123def456",
+    "usuario": {
+      "id": 2,
+      "nombreUsuario": "ana.perez",
+      "nombreCompleto": "Ana Pérez",
+      "email": "ana@ejemplo.com",
+      "rol": "usuario_atencion",
+      "areaId": 1,
+      "areaNombre": "Caja",
+      "areasAtencion": [1, 2],
+      "activo": true,
+      "ultimoAcceso": "2026-06-25T10:15:00"
+    },
+    "expiraEn": "2026-06-25T18:15:00"
+  },
+  "login_response_error": {
+    "error": true,
+    "mensaje": "Credenciales inválidas",
+    "codigo": "AUTH_INVALID_CREDENTIALS",
+    "intentosRestantes": 3
+  },
+  "login_response_bloqueado": {
+    "error": true,
+    "mensaje": "Usuario bloqueado por 15 minutos (5 intentos fallidos)",
+    "codigo": "AUTH_BLOCKED",
+    "desbloqueoEn": "2026-06-25T10:30:00"
+  },
+  "refresh_request": {
+    "refreshToken": "rt_abc123def456"
+  },
+  "refresh_response": {
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "rt_ghi789jkl012",
+    "expiraEn": "2026-06-25T19:00:00"
+  }
+}

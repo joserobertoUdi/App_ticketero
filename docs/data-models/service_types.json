@@ -1,0 +1,26 @@
+{
+  "entidad": "ServiceType",
+  "descripcion": "Tipo de servicio configurable por área (Pago, Consulta, Retiro, etc.)",
+  "campos": {
+    "id": "int — Identificador único (autoincremental por área)",
+    "areaId": "int — FK al área a la que pertenece",
+    "nombre": "string (100) — Nombre visible del servicio",
+    "iconName": "string — Nombre del icono predefinido (payments, search, help, etc.)"
+  },
+  "request_crear": {
+    "areaId": 1,
+    "nombre": "Pago",
+    "iconName": "payments"
+  },
+  "request_actualizar": {
+    "id": 1,
+    "nombre": "Pago Rápido",
+    "iconName": "payments"
+  },
+  "response": {
+    "id": 1,
+    "areaId": 1,
+    "nombre": "Pago Rápido",
+    "iconName": "payments"
+  }
+}

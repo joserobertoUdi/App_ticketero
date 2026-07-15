@@ -1,0 +1,42 @@
+{
+  "entidad": "AttentionLog",
+  "descripcion": "Registro de atención de un ticket (historial)",
+  "campos": {
+    "id": "int (PK)",
+    "ticketId": "int (FK → Tickets.id)",
+    "userId": "int (FK → Users.id)",
+    "userName": "string?",
+    "codigoTicket": "string?",
+    "areaId": "int?",
+    "areaNombre": "string?",
+    "puesto": "string? — Puesto desde donde se atendió",
+    "llamadoAt": "datetime",
+    "iniciadoAt": "datetime?",
+    "completadoAt": "datetime?",
+    "tiempoSegundos": "int?",
+    "tiempoFormateado": "string? — Ej: '4:45'",
+    "tiempoEsperaSegundos": "int?",
+    "tiempoEsperaFormateado": "string?",
+    "observacion": "string (500)?"
+  },
+  "response_lista": [
+    {
+      "id": 100,
+      "ticketId": 42,
+      "userId": 2,
+      "userName": "Ana Pérez",
+      "codigoTicket": "CAJA-0042",
+      "areaId": 1,
+      "areaNombre": "Caja",
+      "puesto": "Caja 1",
+      "llamadoAt": "2026-06-25T10:16:00",
+      "iniciadoAt": "2026-06-25T10:16:30",
+      "completadoAt": "2026-06-25T10:21:15",
+      "tiempoSegundos": 285,
+      "tiempoFormateado": "4:45",
+      "tiempoEsperaSegundos": 60,
+      "tiempoEsperaFormateado": "1:00",
+      "observacion": "Cliente atendido correctamente"
+    }
+  ]
+}

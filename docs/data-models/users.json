@@ -1,0 +1,65 @@
+{
+  "entidad": "User",
+  "descripcion": "Usuario del sistema (admin, atención, llamador)",
+  "campos": {
+    "id": "int (PK)",
+    "nombreUsuario": "string (50, UNIQUE)",
+    "nombreCompleto": "string (150)",
+    "email": "string (100)",
+    "password": "string — Solo en creación/actualización (se hashea)",
+    "rol": "enum: administrador | usuario_atencion | usuario_llamador",
+    "areaId": "int? (FK → Areas.id) — Área principal",
+    "areaNombre": "string? — Solo lectura",
+    "puesto": "string? — DEPRECATED (usar PuestoInfo)",
+    "areasAtencion": "int[] — IDs de áreas que puede atender",
+    "activo": "bool",
+    "ultimoAcceso": "datetime?"
+  },
+  "request_crear": {
+    "nombreUsuario": "ana.perez",
+    "nombreCompleto": "Ana Pérez",
+    "email": "ana.perez@ejemplo.com",
+    "password": "MiPassword123",
+    "rol": "usuario_atencion",
+    "areaId": 1,
+    "areasAtencion": [1, 2],
+    "activo": true
+  },
+  "request_actualizar": {
+    "id": 2,
+    "nombreCompleto": "Ana Pérez López",
+    "email": "ana@ejemplo.com",
+    "rol": "usuario_atencion",
+    "areaId": 1,
+    "areasAtencion": [1, 2, 3],
+    "activo": true
+  },
+  "response_lista": [
+    {
+      "id": 1,
+      "nombreUsuario": "admin",
+      "nombreCompleto": "Administrador",
+      "email": "admin@sistema.com",
+      "rol": "administrador",
+      "areaId": null,
+      "areaNombre": null,
+      "puesto": null,
+      "areasAtencion": [],
+      "activo": true,
+      "ultimoAcceso": "2026-06-25T09:00:00"
+    },
+    {
+      "id": 2,
+      "nombreUsuario": "ana.perez",
+      "nombreCompleto": "Ana Pérez",
+      "email": "ana@ejemplo.com",
+      "rol": "usuario_atencion",
+      "areaId": 1,
+      "areaNombre": "Caja",
+      "puesto": null,
+      "areasAtencion": [1, 2],
+      "activo": true,
+      "ultimoAcceso": "2026-06-25T08:30:00"
+    }
+  ]
+}

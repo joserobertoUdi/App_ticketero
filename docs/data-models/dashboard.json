@@ -1,0 +1,86 @@
+{
+  "DashboardStats": {
+    "descripcion": "Estadísticas resumidas del dashboard",
+    "campos": {
+      "totalTickets": "int",
+      "totalAtendidos": "int",
+      "totalPendientes": "int",
+      "porcentajeAtendidos": "double — Ej: 91.5",
+      "tiempoPromedioAtencionSegundos": "int",
+      "tiempoPromedioAtencionFormateado": "string — Ej: '4:32'",
+      "tiempoPromedioEsperaSegundos": "int",
+      "tiempoPromedioEsperaFormateado": "string — Ej: '3:05'",
+      "periodoInicio": "datetime",
+      "periodoFin": "datetime"
+    },
+    "response_hoy": {
+      "totalTickets": 142,
+      "totalAtendidos": 130,
+      "totalPendientes": 12,
+      "porcentajeAtendidos": 91.5,
+      "tiempoPromedioAtencionSegundos": 272,
+      "tiempoPromedioAtencionFormateado": "4:32",
+      "tiempoPromedioEsperaSegundos": 185,
+      "tiempoPromedioEsperaFormateado": "3:05",
+      "periodoInicio": "2026-06-25T00:00:00",
+      "periodoFin": "2026-06-25T23:59:59"
+    },
+    "response_semana": {
+      "totalTickets": 850,
+      "totalAtendidos": 790,
+      "totalPendientes": 60,
+      "porcentajeAtendidos": 92.9,
+      "tiempoPromedioAtencionSegundos": 290,
+      "tiempoPromedioAtencionFormateado": "4:50",
+      "tiempoPromedioEsperaSegundos": 200,
+      "tiempoPromedioEsperaFormateado": "3:20",
+      "periodoInicio": "2026-06-19T00:00:00",
+      "periodoFin": "2026-06-25T23:59:59"
+    },
+    "response_mes": {
+      "totalTickets": 3200,
+      "totalAtendidos": 3050,
+      "totalPendientes": 150,
+      "porcentajeAtendidos": 95.3,
+      "tiempoPromedioAtencionSegundos": 265,
+      "tiempoPromedioAtencionFormateado": "4:25",
+      "tiempoPromedioEsperaSegundos": 175,
+      "tiempoPromedioEsperaFormateado": "2:55",
+      "periodoInicio": "2026-06-01T00:00:00",
+      "periodoFin": "2026-06-25T23:59:59"
+    }
+  },
+  "AreaStats": {
+    "descripcion": "Estadísticas por área",
+    "response": [
+      { "area": "Caja", "total": 60, "atendidos": 55, "pendientes": 5, "tiempoPromedioSegundos": 240 },
+      { "area": "Informacion", "total": 35, "atendidos": 33, "pendientes": 2, "tiempoPromedioSegundos": 310 },
+      { "area": "Inscripcion", "total": 25, "atendidos": 22, "pendientes": 3, "tiempoPromedioSegundos": 280 },
+      { "area": "Documentacion", "total": 30, "atendidos": 28, "pendientes": 2, "tiempoPromedioSegundos": 260 }
+    ]
+  },
+  "UserStats": {
+    "descripcion": "Estadísticas por agente",
+    "response": [
+      { "nombre": "Ana Pérez", "totalAtendidos": 45, "tiempoPromedioSegundos": 225, "area": "Caja" },
+      { "nombre": "Luis Rojas", "totalAtendidos": 38, "tiempoPromedioSegundos": 320, "area": "Informacion" },
+      { "nombre": "Juan Díaz", "totalAtendidos": 42, "tiempoPromedioSegundos": 150, "area": "Caja" }
+    ]
+  },
+  "HourlyBreakdown": {
+    "descripcion": "Distribución de tickets por hora",
+    "response": [
+      { "hora": 8,  "total": 5 },
+      { "hora": 9,  "total": 15 },
+      { "hora": 10, "total": 22 },
+      { "hora": 11, "total": 18 },
+      { "hora": 12, "total": 12 },
+      { "hora": 13, "total": 8 },
+      { "hora": 14, "total": 14 },
+      { "hora": 15, "total": 20 },
+      { "hora": 16, "total": 16 },
+      { "hora": 17, "total": 10 },
+      { "hora": 18, "total": 2 }
+    ]
+  }
+}

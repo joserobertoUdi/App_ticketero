@@ -1,0 +1,717 @@
+{
+  "meta": {
+    "sistema": "Sistema Ticketero - Modelos de Datos",
+    "version": "1.0.0",
+    "descripcion": "Modelos JSON de entrada/salida para todos los endpoints del sistema. Incluye request, response y variantes por caso de uso.",
+    "convenciones": {
+      "fechas": "ISO 8601 (yyyy-MM-ddTHH:mm:ss)",
+      "nulos": "Campos opcionales se omiten o van como null",
+      "enum": "Strings en snake_case",
+      "ids": "Enteros, autoincrementales",
+      "estados": "TicketStatus: pendiente, llamado, en_atencion, completado, cancelado, derivado"
+    }
+  },
+
+  "entidades": {
+    "Area": {
+      "descripcion": "Departamento o área de servicio (Caja, Información, Inscripciones, Documentación)",
+      "campos": {
+        "id": "int (PK, autoincremental)",
+        "nombre": "string (100) — Nombre del área",
+        "prefijo": "string (10) — Prefijo para código de ticket (CAJA, INFO, INSC, DOC)",
+        "logoUrl": "string? — URL o path del logo",
+        "activo": "bool — Si el área está habilitada",
+        "createdAt": "datetime?",
+        "updatedAt": "datetime?"
+      },
+      "request_crear": {
+        "nombre": "Caja",
+        "prefijo": "CAJA",
+        "logoUrl": ""
+      },
+      "request_actualizar": {
+        "id": 1,
+        "nombre": "Caja Principal",
+        "prefijo": "CAJA",
+        "activo": true,
+        "logoUrl": "preset:cash_register"
+      },
+      "response": {
+        "id": 1,
+        "nombre": "Caja",
+        "prefijo": "CAJA",
+        "logoUrl": "preset:cash_register",
+        "activo": true,
+        "createdAt": "2026-06-25T08:00:00",
+        "updatedAt": "2026-06-25T10:30:00"
+      }
+    },
+
+    "ServiceType": {
+      "descripcion": "Tipo de servicio configurable por área (Pago, Consulta, Retiro, etc.)",
+      "campos": {
+        "id": "int — Identificador único (autoincremental por área)",
+        "areaId": "int — FK al área a la que pertenece",
+        "nombre": "string (100) — Nombre visible del servicio",
+        "iconName": "string — Nombre del icono predefinido (payments, search, help, etc.)"
+      },
+      "request_crear": {
+        "areaId": 1,
+        "nombre": "Pago",
+        "iconName": "payments"
+      },
+      "request_actualizar": {
+        "id": 1,
+        "nombre": "Pago Rápido",
+        "iconName": "payments"
+      },
+      "response": {
+        "id": 1,
+        "areaId": 1,
+        "nombre": "Pago Rápido",
+        "iconName": "payments"
+      }
+    },
+
+    "User": {
+      "descripcion": "Usuario del sistema (admin, atención, llamador)",
+      "campos": {
+        "id": "int (PK)",
+        "nombreUsuario": "string (50, UNIQUE)",
+        "nombreCompleto": "string (150)",
+        "email": "string (100)",
+        "password": "string — Solo en creación/actualización (se hashea)",
+        "rol": "enum: administrador | usuario_atencion | usuario_llamador",
+        "areaId": "int? (FK → Areas.id) — Área principal",
+        "areaNombre": "string? — Solo lectura",
+        "puesto": "string? — DEPRECATED (usar PuestoInfo)",
+        "areasAtencion": "int[] — IDs de áreas que puede atender",
+        "activo": "bool",
+        "ultimoAcceso": "datetime?"
+      },
+      "request_crear": {
+        "nombreUsuario": "ana.perez",
+        "nombreCompleto": "Ana Pérez",
+        "email": "ana.perez@ejemplo.com",
+        "password": "MiPassword123",
+        "rol": "usuario_atencion",
+        "areaId": 1,
+        "areasAtencion": [1, 2],
+        "activo": true
+      },
+      "request_actualizar": {
+        "id": 2,
+        "nombreCompleto": "Ana Pérez López",
+        "email": "ana@ejemplo.com",
+        "rol": "usuario_atencion",
+        "areaId": 1,
+        "areasAtencion": [1, 2, 3],
+        "activo": true
+      },
+      "response_lista": [
+        {
+          "id": 1,
+          "nombreUsuario": "admin",
+          "nombreCompleto": "Administrador",
+          "email": "admin@sistema.com",
+          "rol": "administrador",
+          "areaId": null,
+          "areaNombre": null,
+          "puesto": null,
+          "areasAtencion": [],
+          "activo": true,
+          "ultimoAcceso": "2026-06-25T09:00:00"
+        },
+        {
+          "id": 2,
+          "nombreUsuario": "ana.perez",
+          "nombreCompleto": "Ana Pérez",
+          "email": "ana@ejemplo.com",
+          "rol": "usuario_atencion",
+          "areaId": 1,
+          "areaNombre": "Caja",
+          "puesto": null,
+          "areasAtencion": [1, 2],
+          "activo": true,
+          "ultimoAcceso": "2026-06-25T08:30:00"
+        }
+      ]
+    },
+
+    "Ticket": {
+      "descripcion": "Ticket de atención generado en kiosko o por derivación",
+      "campos": {
+        "id": "int (PK)",
+        "codigoTicket": "string (20, UNIQUE) — CAJA-0001, INFO-0042",
+        "tipoTicket": "enum: caja | informacion | inscripcion | documentacion",
+        "areaId": "int (FK → Areas.id)",
+        "areaNombre": "string — Solo lectura",
+        "status": "enum: pendiente | llamado | en_atencion | completado | cancelado",
+        "llamadoPorUserId": "int? (FK → Users.id)",
+        "llamadoEnPuesto": "string? — Nombre del puesto que llamó",
+        "createdAt": "datetime",
+        "updatedAt": "datetime?",
+        "tiempoEsperaSegundos": "int? — Calculado: llamadoAt - createdAt",
+        "tiempoAtencionSegundos": "int? — Calculado: completadoAt - iniciadoAt",
+        "tiempoAtencionFormateado": "string? — Ej: '4:32'",
+        "prioridad": "int — 0=normal, 1=derivado/prioritario",
+        "derivadoDe": "string? — Código del ticket origen si es derivado",
+        "derivadoDeNombre": "string? — Área del ticket origen"
+      },
+      "request_crear_kiosko": {
+        "areaId": 1,
+        "tipoTicket": "caja"
+      },
+      "request_llamar": {
+        "puesto": "Caja 1"
+      },
+      "request_iniciar_atencion": {},
+      "request_completar_atencion": {
+        "observacion": "Cliente atendido correctamente"
+      },
+      "request_derivar": {
+        "targetAreaId": 2,
+        "motivo": "El cliente necesita información adicional"
+      },
+      "response_creado": {
+        "id": 42,
+        "codigoTicket": "CAJA-0042",
+        "tipoTicket": "caja",
+        "areaId": 1,
+        "areaNombre": "Caja",
+        "status": "pendiente",
+        "llamadoPorUserId": null,
+        "llamadoEnPuesto": null,
+        "createdAt": "2026-06-25T10:15:00",
+        "prioridad": 0,
+        "derivadoDe": null,
+        "derivadoDeNombre": null
+      },
+      "response_llamado": {
+        "id": 42,
+        "codigoTicket": "CAJA-0042",
+        "status": "llamado",
+        "llamadoPorUserId": 2,
+        "llamadoEnPuesto": "Caja 1",
+        "updatedAt": "2026-06-25T10:16:00",
+        "tiempoEsperaSegundos": 60
+      },
+      "response_en_atencion": {
+        "id": 42,
+        "codigoTicket": "CAJA-0042",
+        "status": "en_atencion",
+        "llamadoPorUserId": 2,
+        "llamadoEnPuesto": "Caja 1",
+        "updatedAt": "2026-06-25T10:16:30"
+      },
+      "response_completado": {
+        "id": 42,
+        "codigoTicket": "CAJA-0042",
+        "status": "completado",
+        "updatedAt": "2026-06-25T10:21:15",
+        "tiempoAtencionSegundos": 285,
+        "tiempoAtencionFormateado": "4:45"
+      },
+      "response_derivado": {
+        "id": 43,
+        "codigoTicket": "INFO-0001",
+        "tipoTicket": "informacion",
+        "areaId": 2,
+        "areaNombre": "Informacion",
+        "status": "pendiente",
+        "prioridad": 1,
+        "derivadoDe": "CAJA-0042",
+        "derivadoDeNombre": "Caja",
+        "createdAt": "2026-06-25T10:17:00"
+      },
+      "response_cola_pendientes": [
+        {
+          "codigoTicket": "CAJA-0040",
+          "areaNombre": "Caja",
+          "status": "pendiente",
+          "createdAt": "2026-06-25T09:50:00",
+          "prioridad": 0
+        },
+        {
+          "codigoTicket": "INFO-0001",
+          "areaNombre": "Informacion",
+          "status": "pendiente",
+          "createdAt": "2026-06-25T10:17:00",
+          "prioridad": 1,
+          "derivadoDe": "CAJA-0042",
+          "derivadoDeNombre": "Caja"
+        },
+        {
+          "codigoTicket": "CAJA-0041",
+          "areaNombre": "Caja",
+          "status": "pendiente",
+          "createdAt": "2026-06-25T10:00:00",
+          "prioridad": 0
+        }
+      ]
+    },
+
+    "AttentionLog": {
+      "descripcion": "Registro de atención de un ticket (historial)",
+      "campos": {
+        "id": "int (PK)",
+        "ticketId": "int (FK → Tickets.id)",
+        "userId": "int (FK → Users.id)",
+        "userName": "string?",
+        "codigoTicket": "string?",
+        "areaId": "int?",
+        "areaNombre": "string?",
+        "puesto": "string? — Puesto desde donde se atendió",
+        "llamadoAt": "datetime",
+        "iniciadoAt": "datetime?",
+        "completadoAt": "datetime?",
+        "tiempoSegundos": "int?",
+        "tiempoFormateado": "string? — Ej: '4:45'",
+        "tiempoEsperaSegundos": "int?",
+        "tiempoEsperaFormateado": "string?",
+        "observacion": "string (500)?"
+      },
+      "response_lista": [
+        {
+          "id": 100,
+          "ticketId": 42,
+          "userId": 2,
+          "userName": "Ana Pérez",
+          "codigoTicket": "CAJA-0042",
+          "areaId": 1,
+          "areaNombre": "Caja",
+          "puesto": "Caja 1",
+          "llamadoAt": "2026-06-25T10:16:00",
+          "iniciadoAt": "2026-06-25T10:16:30",
+          "completadoAt": "2026-06-25T10:21:15",
+          "tiempoSegundos": 285,
+          "tiempoFormateado": "4:45",
+          "tiempoEsperaSegundos": 60,
+          "tiempoEsperaFormateado": "1:00",
+          "observacion": "Cliente atendido correctamente"
+        }
+      ]
+    },
+
+    "PuestoInfo": {
+      "descripcion": "Puesto físico de atención asociado a un área (Caja 1, Mesa 3, etc.)",
+      "campos": {
+        "id": "int — ID único dentro del área (no global)",
+        "nombre": "string — Ej: 'Caja 1', 'Mesa 3'",
+        "occupiedByUserId": "int? — null = disponible"
+      },
+      "request_guardar_layout": {
+        "areaId": 1,
+        "puestos": [
+          { "id": 1, "nombre": "Caja 1" },
+          { "id": 2, "nombre": "Caja 2" },
+          { "id": 3, "nombre": "Caja 3" }
+        ]
+      },
+      "request_ocupar": {
+        "areaId": 1,
+        "puestoId": 1,
+        "userId": 2
+      },
+      "request_liberar": {
+        "areaId": 1,
+        "puestoId": 1
+      },
+      "response_lista": [
+        { "id": 1, "nombre": "Caja 1", "occupiedByUserId": 2 },
+        { "id": 2, "nombre": "Caja 2", "occupiedByUserId": null },
+        { "id": 3, "nombre": "Caja 3", "occupiedByUserId": 5 }
+      ]
+    },
+
+    "KioskoLocation": {
+      "descripcion": "Ubicación física de un terminal kiosko de autoservicio",
+      "campos": {
+        "id": "int (PK)",
+        "nombre": "string — Ej: 'Entrada Principal', 'Planta Baja'",
+        "areaIds": "int[] — IDs de áreas que ofrece este kiosko"
+      },
+      "request_crear": {
+        "nombre": "Entrada Principal",
+        "areaIds": [1, 2, 3, 4]
+      },
+      "request_actualizar": {
+        "id": 1,
+        "nombre": "Entrada Principal",
+        "areaIds": [1, 2]
+      },
+      "response": {
+        "id": 1,
+        "nombre": "Entrada Principal",
+        "areaIds": [1, 2, 3, 4]
+      }
+    },
+
+    "DashboardStats": {
+      "descripcion": "Estadísticas resumidas del dashboard",
+      "campos": {
+        "totalTickets": "int",
+        "totalAtendidos": "int",
+        "totalPendientes": "int",
+        "porcentajeAtendidos": "double — Ej: 91.5",
+        "tiempoPromedioAtencionSegundos": "int",
+        "tiempoPromedioAtencionFormateado": "string — Ej: '4:32'",
+        "tiempoPromedioEsperaSegundos": "int",
+        "tiempoPromedioEsperaFormateado": "string — Ej: '3:05'",
+        "periodoInicio": "datetime",
+        "periodoFin": "datetime"
+      },
+      "response_hoy": {
+        "totalTickets": 142,
+        "totalAtendidos": 130,
+        "totalPendientes": 12,
+        "porcentajeAtendidos": 91.5,
+        "tiempoPromedioAtencionSegundos": 272,
+        "tiempoPromedioAtencionFormateado": "4:32",
+        "tiempoPromedioEsperaSegundos": 185,
+        "tiempoPromedioEsperaFormateado": "3:05",
+        "periodoInicio": "2026-06-25T00:00:00",
+        "periodoFin": "2026-06-25T23:59:59"
+      },
+      "response_semana": {
+        "totalTickets": 850,
+        "totalAtendidos": 790,
+        "totalPendientes": 60,
+        "porcentajeAtendidos": 92.9,
+        "tiempoPromedioAtencionSegundos": 290,
+        "tiempoPromedioAtencionFormateado": "4:50",
+        "tiempoPromedioEsperaSegundos": 200,
+        "tiempoPromedioEsperaFormateado": "3:20",
+        "periodoInicio": "2026-06-19T00:00:00",
+        "periodoFin": "2026-06-25T23:59:59"
+      },
+      "response_mes": {
+        "totalTickets": 3200,
+        "totalAtendidos": 3050,
+        "totalPendientes": 150,
+        "porcentajeAtendidos": 95.3,
+        "tiempoPromedioAtencionSegundos": 265,
+        "tiempoPromedioAtencionFormateado": "4:25",
+        "tiempoPromedioEsperaSegundos": 175,
+        "tiempoPromedioEsperaFormateado": "2:55",
+        "periodoInicio": "2026-06-01T00:00:00",
+        "periodoFin": "2026-06-25T23:59:59"
+      }
+    },
+
+    "AreaStats": {
+      "descripcion": "Estadísticas por área",
+      "response": [
+        { "area": "Caja", "total": 60, "atendidos": 55, "pendientes": 5, "tiempoPromedioSegundos": 240 },
+        { "area": "Informacion", "total": 35, "atendidos": 33, "pendientes": 2, "tiempoPromedioSegundos": 310 },
+        { "area": "Inscripcion", "total": 25, "atendidos": 22, "pendientes": 3, "tiempoPromedioSegundos": 280 },
+        { "area": "Documentacion", "total": 30, "atendidos": 28, "pendientes": 2, "tiempoPromedioSegundos": 260 }
+      ]
+    },
+
+    "UserStats": {
+      "descripcion": "Estadísticas por agente",
+      "response": [
+        { "nombre": "Ana Pérez", "totalAtendidos": 45, "tiempoPromedioSegundos": 225, "area": "Caja" },
+        { "nombre": "Luis Rojas", "totalAtendidos": 38, "tiempoPromedioSegundos": 320, "area": "Informacion" },
+        { "nombre": "Juan Díaz", "totalAtendidos": 42, "tiempoPromedioSegundos": 150, "area": "Caja" }
+      ]
+    },
+
+    "HourlyBreakdown": {
+      "descripcion": "Distribución de tickets por hora",
+      "response": [
+        { "hora": 8,  "total": 5 },
+        { "hora": 9,  "total": 15 },
+        { "hora": 10, "total": 22 },
+        { "hora": 11, "total": 18 },
+        { "hora": 12, "total": 12 },
+        { "hora": 13, "total": 8 },
+        { "hora": 14, "total": 14 },
+        { "hora": 15, "total": 20 },
+        { "hora": 16, "total": 16 },
+        { "hora": 17, "total": 10 },
+        { "hora": 18, "total": 2 }
+      ]
+    }
+  },
+
+  "autenticacion": {
+    "login_request": {
+      "nombreUsuario": "ana.perez",
+      "password": "MiPassword123"
+    },
+    "login_response_exito": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "rt_abc123def456",
+      "usuario": {
+        "id": 2,
+        "nombreUsuario": "ana.perez",
+        "nombreCompleto": "Ana Pérez",
+        "email": "ana@ejemplo.com",
+        "rol": "usuario_atencion",
+        "areaId": 1,
+        "areaNombre": "Caja",
+        "areasAtencion": [1, 2],
+        "activo": true,
+        "ultimoAcceso": "2026-06-25T10:15:00"
+      },
+      "expiraEn": "2026-06-25T18:15:00"
+    },
+    "login_response_error": {
+      "error": true,
+      "mensaje": "Credenciales inválidas",
+      "codigo": "AUTH_INVALID_CREDENTIALS",
+      "intentosRestantes": 3
+    },
+    "login_response_bloqueado": {
+      "error": true,
+      "mensaje": "Usuario bloqueado por 15 minutos (5 intentos fallidos)",
+      "codigo": "AUTH_BLOCKED",
+      "desbloqueoEn": "2026-06-25T10:30:00"
+    },
+    "refresh_request": {
+      "refreshToken": "rt_abc123def456"
+    },
+    "refresh_response": {
+      "token": "eyJhbGciOiJIUzI1NiIs...",
+      "refreshToken": "rt_ghi789jkl012",
+      "expiraEn": "2026-06-25T19:00:00"
+    }
+  },
+
+  "websocket_signalr": {
+    "descripcion": "Mensajes enviados por SignalR Hub (TicketHub)",
+    "hub_url": "http://localhost:5001/ticketHub",
+    "eventos": {
+      "TicketCreated": {
+        "descripcion": "Nuevo ticket creado en kiosko",
+        "payload": {
+          "id": 42,
+          "codigoTicket": "CAJA-0042",
+          "areaId": 1,
+          "areaNombre": "Caja",
+          "status": "pendiente",
+          "createdAt": "2026-06-25T10:15:00"
+        },
+        "destinatarios": "Grupo del área correspondiente (agents + caller)"
+      },
+      "TicketCalled": {
+        "descripcion": "Ticket llamado por un agente",
+        "payload": {
+          "codigoTicket": "CAJA-0042",
+          "areaId": 1,
+          "areaNombre": "Caja",
+          "puesto": "Caja 1",
+          "llamadoPorUserId": 2,
+          "llamadoPorNombre": "Ana Pérez",
+          "llamadoAt": "2026-06-25T10:16:00"
+        },
+        "destinatarios": "Todos (broadcast) — para mostrar en pantalla TV/caller"
+      },
+      "TicketStarted": {
+        "descripcion": "Atención iniciada por el agente",
+        "payload": {
+          "codigoTicket": "CAJA-0042",
+          "areaId": 1,
+          "userId": 2,
+          "userName": "Ana Pérez",
+          "iniciadoAt": "2026-06-25T10:16:30"
+        },
+        "destinatarios": "Grupo del área"
+      },
+      "TicketCompleted": {
+        "descripcion": "Atención finalizada",
+        "payload": {
+          "codigoTicket": "CAJA-0042",
+          "areaId": 1,
+          "userId": 2,
+          "userName": "Ana Pérez",
+          "completadoAt": "2026-06-25T10:21:15",
+          "tiempoSegundos": 285,
+          "tiempoFormateado": "4:45"
+        },
+        "destinatarios": "Grupo del área"
+      },
+      "TicketDerived": {
+        "descripcion": "Ticket derivado a otra área",
+        "payload": {
+          "codigoTicketOrigen": "CAJA-0042",
+          "areaOrigen": "Caja",
+          "codigoTicketDestino": "INFO-0001",
+          "areaDestino": "Informacion",
+          "nuevoTicketId": 43,
+          "prioridad": 1
+        },
+        "destinatarios": "Grupo del área origen + grupo del área destino"
+      },
+      "QueueUpdated": {
+        "descripcion": "Actualización de la cola de pendientes",
+        "payload": {
+          "areaId": 1,
+          "totalPendientes": 8,
+          "ultimoTicket": "CAJA-0042"
+        },
+        "destinatarios": "Grupo del área"
+      }
+    }
+  },
+
+  "configuracion": {
+    "system_config_request_guardar": {
+      "serverUrl": "http://192.168.1.100:5000",
+      "tiempoEstimadoMinutos": 5,
+      "maxTicketsPorDia": 500,
+      "ticketPrefixFormat": "{0}-{1:D4}"
+    },
+    "video_config_request_guardar": {
+      "pantalla": "ticket",
+      "url": "C:\\Ticketero\\Storage\\Videos\\fondo_ticket.mp4"
+    },
+    "video_config_request_eliminar": {
+      "pantalla": "caller"
+    },
+    "health_response_ok": {
+      "status": "healthy",
+      "version": "1.0.0",
+      "uptime": "48h 15m 30s",
+      "database": "connected",
+      "websocket": "connected",
+      "timestamp": "2026-06-25T10:30:00"
+    },
+    "health_response_error": {
+      "status": "degraded",
+      "version": "1.0.0",
+      "database": "disconnected",
+      "websocket": "connected",
+      "error": "Cannot open database 'TicketeroDB'",
+      "timestamp": "2026-06-25T10:30:00"
+    }
+  },
+
+  "paginacion": {
+    "descripcion": "Formato para endpoints que devuelven listas paginadas",
+    "request": {
+      "page": 1,
+      "pageSize": 20,
+      "sortBy": "createdAt",
+      "sortOrder": "desc",
+      "filtros": {
+        "areaId": 1,
+        "status": "pendiente",
+        "desde": "2026-06-25T00:00:00",
+        "hasta": "2026-06-25T23:59:59",
+        "userId": 2
+      }
+    },
+    "response": {
+      "data": [],
+      "pagination": {
+        "page": 1,
+        "pageSize": 20,
+        "totalItems": 142,
+        "totalPages": 8,
+        "hasNextPage": true,
+        "hasPreviousPage": false
+      }
+    }
+  },
+
+  "errores": {
+    "formato_general": {
+      "error": true,
+      "mensaje": "Descripción del error",
+      "codigo": "ERROR_CODE",
+      "detalles": {},
+      "timestamp": "2026-06-25T10:30:00"
+    },
+    "codigos_error": {
+      "AUTH_INVALID_CREDENTIALS": "Credenciales incorrectas",
+      "AUTH_BLOCKED": "Usuario bloqueado temporalmente",
+      "AUTH_TOKEN_EXPIRED": "Token expirado",
+      "AUTH_TOKEN_INVALID": "Token inválido",
+      "AUTH_UNAUTHORIZED": "No autorizado para esta acción",
+      "VALIDATION_ERROR": "Error de validación de campos",
+      "NOT_FOUND": "Recurso no encontrado",
+      "AREA_HAS_USERS": "No se puede eliminar el área: tiene usuarios asignados",
+      "AREA_HAS_TICKETS": "No se puede eliminar el área: tiene tickets activos",
+      "USER_HAS_ACTIVE_ATTENTION": "El usuario ya tiene un ticket en atención",
+      "TICKET_ALREADY_CALLED": "El ticket ya fue llamado",
+      "TICKET_INVALID_STATUS": "El ticket no está en estado válido para esta operación",
+      "PUESTO_ALREADY_OCCUPIED": "El puesto ya está ocupado",
+      "MAX_TICKETS_REACHED": "Se alcanzó el máximo de tickets por día",
+      "DUPLICATE_USERNAME": "El nombre de usuario ya existe",
+      "INTERNAL_ERROR": "Error interno del servidor"
+    },
+    "response_validation_error": {
+      "error": true,
+      "mensaje": "Error de validación",
+      "codigo": "VALIDATION_ERROR",
+      "detalles": {
+        "nombreUsuario": "El nombre de usuario es requerido",
+        "password": "La contraseña debe tener al menos 6 caracteres",
+        "rol": "Rol inválido. Valores permitidos: administrador, usuario_atencion, usuario_llamador"
+      }
+    }
+  },
+
+  "caller_ticket_state": {
+    "descripcion": "Estado completo enviado desde la ventana principal a la ventana caller vía WindowMethodChannel",
+    "payload": {
+      "activeCodigo": "CAJA-0042",
+      "lastCalledCodigo": "CAJA-0042",
+      "lastCalledArea": "Caja",
+      "lastCalledPuesto": "Caja 1",
+      "lastCalledPriority": false,
+      "lastCalledDerivadoDe": null,
+      "lastCalledDerivadoDeNombre": null,
+      "recentCalls": [
+        {
+          "codigoTicket": "CAJA-0042",
+          "areaNombre": "Caja",
+          "areaId": 1,
+          "calledAt": "2026-06-25T10:16:00",
+          "prioridad": 0,
+          "derivadoDe": null,
+          "puesto": "Caja 1",
+          "status": "llamado"
+        }
+      ],
+      "history": [],
+      "historyCodigos": ["CAJA-0042"],
+      "videoCallerScreen": null
+    }
+  },
+
+  "impresion": {
+    "descripcion": "Datos para impresión de ticket (ESC/POS)",
+    "ticket_print_data": {
+      "encabezado": "SISTEMA TICKETERO",
+      "direccion": "Av. Principal 123",
+      "telefono": "555-0123",
+      "codigoTicket": "CAJA-0042",
+      "area": "Caja",
+      "fecha": "25/06/2026",
+      "hora": "10:15:00",
+      "mensajeBienvenida": "Gracias por su espera",
+      "mensajeLlamado": "Pase a Caja 1",
+      "codigoBarras": "CAJA-0042",
+      "qrData": "https://sistema/ticket/CAJA-0042",
+      "footer": "Conserve su ticket para ser atendido"
+    },
+    "printer_config": {
+      "tipo": "network",
+      "host": "192.168.1.200",
+      "port": 9100,
+      "nombreImpresora": "Ticket Printer",
+      "charset": "CP850",
+      "paperWidthMm": 80
+    },
+    "printer_config_windows": {
+      "tipo": "windows",
+      "nombreImpresora": "EPSON TM-T20X",
+      "charset": "CP850",
+      "paperWidthMm": 80
+    }
+  }
+}

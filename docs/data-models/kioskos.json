@@ -1,0 +1,23 @@
+{
+  "entidad": "KioskoLocation",
+  "descripcion": "Ubicación física de un terminal kiosko de autoservicio",
+  "campos": {
+    "id": "int (PK)",
+    "nombre": "string — Ej: 'Entrada Principal', 'Planta Baja'",
+    "areaIds": "int[] — IDs de áreas que ofrece este kiosko"
+  },
+  "request_crear": {
+    "nombre": "Entrada Principal",
+    "areaIds": [1, 2, 3, 4]
+  },
+  "request_actualizar": {
+    "id": 1,
+    "nombre": "Entrada Principal",
+    "areaIds": [1, 2]
+  },
+  "response": {
+    "id": 1,
+    "nombre": "Entrada Principal",
+    "areaIds": [1, 2, 3, 4]
+  }
+}

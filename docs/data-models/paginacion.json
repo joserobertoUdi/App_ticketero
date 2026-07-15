@@ -1,0 +1,27 @@
+{
+  "descripcion": "Formato para endpoints que devuelven listas paginadas",
+  "request": {
+    "page": 1,
+    "pageSize": 20,
+    "sortBy": "createdAt",
+    "sortOrder": "desc",
+    "filtros": {
+      "areaId": 1,
+      "status": "pendiente",
+      "desde": "2026-06-25T00:00:00",
+      "hasta": "2026-06-25T23:59:59",
+      "userId": 2
+    }
+  },
+  "response": {
+    "data": [],
+    "pagination": {
+      "page": 1,
+      "pageSize": 20,
+      "totalItems": 142,
+      "totalPages": 8,
+      "hasNextPage": true,
+      "hasPreviousPage": false
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "entidad": "Ticket",
+  "descripcion": "Ticket de atención generado en kiosko o por derivación",
+  "campos": {
+    "id": "int (PK)",
+    "codigoTicket": "string (20, UNIQUE) — CAJA-0001, INFO-0042",
+    "tipoTicket": "enum: caja | informacion | inscripcion | documentacion",
+    "areaId": "int (FK → Areas.id)",
+    "areaNombre": "string — Solo lectura",
+    "status": "enum: pendiente | llamado | en_atencion | completado | cancelado",
+    "llamadoPorUserId": "int? (FK → Users.id)",
+    "llamadoEnPuesto": "string? — Nombre del puesto que llamó",
+    "createdAt": "datetime",
+    "updatedAt": "datetime?",
+    "tiempoEsperaSegundos": "int? — Calculado: llamadoAt - createdAt",
+    "tiempoAtencionSegundos": "int? — Calculado: completadoAt - iniciadoAt",
+    "tiempoAtencionFormateado": "string? — Ej: '4:32'",
+    "prioridad": "int — 0=normal, 1=derivado/prioritario",
+    "derivadoDe": "string? — Código del ticket origen si es derivado",
+    "derivadoDeNombre": "string? — Área del ticket origen"
+  },
+  "request_crear_kiosko": {
+    "areaId": 1,
+    "tipoTicket": "caja"
+  },
+  "request_llamar": {
+    "puesto": "Caja 1"
+  },
+  "request_iniciar_atencion": {},
+  "request_completar_atencion": {
+    "observacion": "Cliente atendido correctamente"
+  },
+  "request_derivar": {
+    "targetAreaId": 2,
+    "motivo": "El cliente necesita información adicional"
+  },
+  "response_creado": {
+    "id": 42,
+    "codigoTicket": "CAJA-0042",
+    "tipoTicket": "caja",
+    "areaId": 1,
+    "areaNombre": "Caja",
+    "status": "pendiente",
+    "llamadoPorUserId": null,
+    "llamadoEnPuesto": null,
+    "createdAt": "2026-06-25T10:15:00",
+    "prioridad": 0,
+    "derivadoDe": null,
+    "derivadoDeNombre": null
+  },
+  "response_llamado": {
+    "id": 42,
+    "codigoTicket": "CAJA-0042",
+    "status": "llamado",
+    "llamadoPorUserId": 2,
+    "llamadoEnPuesto": "Caja 1",
+    "updatedAt": "2026-06-25T10:16:00",
+    "tiempoEsperaSegundos": 60
+  },
+  "response_en_atencion": {
+    "id": 42,
+    "codigoTicket": "CAJA-0042",
+    "status": "en_atencion",
+    "llamadoPorUserId": 2,
+    "llamadoEnPuesto": "Caja 1",
+    "updatedAt": "2026-06-25T10:16:30"
+  },
+  "response_completado": {
+    "id": 42,
+    "codigoTicket": "CAJA-0042",
+    "status": "completado",
+    "updatedAt": "2026-06-25T10:21:15",
+    "tiempoAtencionSegundos": 285,
+    "tiempoAtencionFormateado": "4:45"
+  },
+  "response_derivado": {
+    "id": 43,
+    "codigoTicket": "INFO-0001",
+    "tipoTicket": "informacion",
+    "areaId": 2,
+    "areaNombre": "Informacion",
+    "status": "pendiente",
+    "prioridad": 1,
+    "derivadoDe": "CAJA-0042",
+    "derivadoDeNombre": "Caja",
+    "createdAt": "2026-06-25T10:17:00"
+  },
+  "response_cola_pendientes": [
+    {
+      "codigoTicket": "CAJA-0040",
+      "areaNombre": "Caja",
+      "status": "pendiente",
+      "createdAt": "2026-06-25T09:50:00",
+      "prioridad": 0
+    },
+    {
+      "codigoTicket": "INFO-0001",
+      "areaNombre": "Informacion",
+      "status": "pendiente",
+      "createdAt": "2026-06-25T10:17:00",
+      "prioridad": 1,
+      "derivadoDe": "CAJA-0042",
+      "derivadoDeNombre": "Caja"
+    },
+    {
+      "codigoTicket": "CAJA-0041",
+      "areaNombre": "Caja",
+      "status": "pendiente",
+      "createdAt": "2026-06-25T10:00:00",
+      "prioridad": 0
+    }
+  ]
+}

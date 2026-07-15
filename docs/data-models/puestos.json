@@ -1,0 +1,31 @@
+{
+  "entidad": "PuestoInfo",
+  "descripcion": "Puesto físico de atención asociado a un área (Caja 1, Mesa 3, etc.)",
+  "campos": {
+    "id": "int — ID único dentro del área (no global)",
+    "nombre": "string — Ej: 'Caja 1', 'Mesa 3'",
+    "occupiedByUserId": "int? — null = disponible"
+  },
+  "request_guardar_layout": {
+    "areaId": 1,
+    "puestos": [
+      { "id": 1, "nombre": "Caja 1" },
+      { "id": 2, "nombre": "Caja 2" },
+      { "id": 3, "nombre": "Caja 3" }
+    ]
+  },
+  "request_ocupar": {
+    "areaId": 1,
+    "puestoId": 1,
+    "userId": 2
+  },
+  "request_liberar": {
+    "areaId": 1,
+    "puestoId": 1
+  },
+  "response_lista": [
+    { "id": 1, "nombre": "Caja 1", "occupiedByUserId": 2 },
+    { "id": 2, "nombre": "Caja 2", "occupiedByUserId": null },
+    { "id": 3, "nombre": "Caja 3", "occupiedByUserId": 5 }
+  ]
+}

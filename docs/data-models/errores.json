@@ -1,0 +1,38 @@
+{
+  "descripcion": "Códigos de error y formato de respuesta de error",
+  "formato_general": {
+    "error": true,
+    "mensaje": "Descripción del error",
+    "codigo": "ERROR_CODE",
+    "detalles": {},
+    "timestamp": "2026-06-25T10:30:00"
+  },
+  "codigos_error": {
+    "AUTH_INVALID_CREDENTIALS": "Credenciales incorrectas",
+    "AUTH_BLOCKED": "Usuario bloqueado temporalmente",
+    "AUTH_TOKEN_EXPIRED": "Token expirado",
+    "AUTH_TOKEN_INVALID": "Token inválido",
+    "AUTH_UNAUTHORIZED": "No autorizado para esta acción",
+    "VALIDATION_ERROR": "Error de validación de campos",
+    "NOT_FOUND": "Recurso no encontrado",
+    "AREA_HAS_USERS": "No se puede eliminar el área: tiene usuarios asignados",
+    "AREA_HAS_TICKETS": "No se puede eliminar el área: tiene tickets activos",
+    "USER_HAS_ACTIVE_ATTENTION": "El usuario ya tiene un ticket en atención",
+    "TICKET_ALREADY_CALLED": "El ticket ya fue llamado",
+    "TICKET_INVALID_STATUS": "El ticket no está en estado válido para esta operación",
+    "PUESTO_ALREADY_OCCUPIED": "El puesto ya está ocupado",
+    "MAX_TICKETS_REACHED": "Se alcanzó el máximo de tickets por día",
+    "DUPLICATE_USERNAME": "El nombre de usuario ya existe",
+    "INTERNAL_ERROR": "Error interno del servidor"
+  },
+  "response_validation_error": {
+    "error": true,
+    "mensaje": "Error de validación",
+    "codigo": "VALIDATION_ERROR",
+    "detalles": {
+      "nombreUsuario": "El nombre de usuario es requerido",
+      "password": "La contraseña debe tener al menos 6 caracteres",
+      "rol": "Rol inválido. Valores permitidos: administrador, usuario_atencion, usuario_llamador"
+    }
+  }
+}

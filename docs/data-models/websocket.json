@@ -1,0 +1,76 @@
+{
+  "descripcion": "Mensajes enviados por SignalR Hub (TicketHub)",
+  "hub_url": "http://localhost:5001/ticketHub",
+  "eventos": {
+    "TicketCreated": {
+      "descripcion": "Nuevo ticket creado en kiosko",
+      "payload": {
+        "id": 42,
+        "codigoTicket": "CAJA-0042",
+        "areaId": 1,
+        "areaNombre": "Caja",
+        "status": "pendiente",
+        "createdAt": "2026-06-25T10:15:00"
+      },
+      "destinatarios": "Grupo del área correspondiente (agents + caller)"
+    },
+    "TicketCalled": {
+      "descripcion": "Ticket llamado por un agente",
+      "payload": {
+        "codigoTicket": "CAJA-0042",
+        "areaId": 1,
+        "areaNombre": "Caja",
+        "puesto": "Caja 1",
+        "llamadoPorUserId": 2,
+        "llamadoPorNombre": "Ana Pérez",
+        "llamadoAt": "2026-06-25T10:16:00"
+      },
+      "destinatarios": "Todos (broadcast) — para mostrar en pantalla TV/caller"
+    },
+    "TicketStarted": {
+      "descripcion": "Atención iniciada por el agente",
+      "payload": {
+        "codigoTicket": "CAJA-0042",
+        "areaId": 1,
+        "userId": 2,
+        "userName": "Ana Pérez",
+        "iniciadoAt": "2026-06-25T10:16:30"
+      },
+      "destinatarios": "Grupo del área"
+    },
+    "TicketCompleted": {
+      "descripcion": "Atención finalizada",
+      "payload": {
+        "codigoTicket": "CAJA-0042",
+        "areaId": 1,
+        "userId": 2,
+        "userName": "Ana Pérez",
+        "completadoAt": "2026-06-25T10:21:15",
+        "tiempoSegundos": 285,
+        "tiempoFormateado": "4:45"
+      },
+      "destinatarios": "Grupo del área"
+    },
+    "TicketDerived": {
+      "descripcion": "Ticket derivado a otra área",
+      "payload": {
+        "codigoTicketOrigen": "CAJA-0042",
+        "areaOrigen": "Caja",
+        "codigoTicketDestino": "INFO-0001",
+        "areaDestino": "Informacion",
+        "nuevoTicketId": 43,
+        "prioridad": 1
+      },
+      "destinatarios": "Grupo del área origen + grupo del área destino"
+    },
+    "QueueUpdated": {
+      "descripcion": "Actualización de la cola de pendientes",
+      "payload": {
+        "areaId": 1,
+        "totalPendientes": 8,
+        "ultimoTicket": "CAJA-0042"
+      },
+      "destinatarios": "Grupo del área"
+    }
+  }
+}

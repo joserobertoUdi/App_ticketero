@@ -1,0 +1,32 @@
+{
+  "descripcion": "Configuración del sistema, video y health check",
+  "system_config_request_guardar": {
+    "serverUrl": "http://192.168.1.100:5000",
+    "tiempoEstimadoMinutos": 5,
+    "maxTicketsPorDia": 500,
+    "ticketPrefixFormat": "{0}-{1:D4}"
+  },
+  "video_config_request_guardar": {
+    "pantalla": "ticket",
+    "url": "C:\\Ticketero\\Storage\\Videos\\fondo_ticket.mp4"
+  },
+  "video_config_request_eliminar": {
+    "pantalla": "caller"
+  },
+  "health_response_ok": {
+    "status": "healthy",
+    "version": "1.0.0",
+    "uptime": "48h 15m 30s",
+    "database": "connected",
+    "websocket": "connected",
+    "timestamp": "2026-06-25T10:30:00"
+  },
+  "health_response_error": {
+    "status": "degraded",
+    "version": "1.0.0",
+    "database": "disconnected",
+    "websocket": "connected",
+    "error": "Cannot open database 'TicketeroDB'",
+    "timestamp": "2026-06-25T10:30:00"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "sistema": "Sistema Ticketero - Modelos de Datos",
+  "version": "1.0.0",
+  "descripcion": "Modelos JSON de entrada/salida para todos los endpoints del sistema. Dividido por sección en archivos independientes.",
+  "convenciones": {
+    "fechas": "ISO 8601 (yyyy-MM-ddTHH:mm:ss)",
+    "nulos": "Campos opcionales se omiten o van como null",
+    "enum": "Strings en snake_case",
+    "ids": "Enteros, autoincrementales",
+    "estados": "TicketStatus: pendiente, llamado, en_atencion, completado, cancelado, derivado"
+  },
+  "archivos": [
+    "areas.json",
+    "service_types.json",
+    "users.json",
+    "tickets.json",
+    "attention_logs.json",
+    "puestos.json",
+    "kioskos.json",
+    "dashboard.json",
+    "autenticacion.json",
+    "websocket.json",
+    "configuracion.json",
+    "paginacion.json",
+    "errores.json",
+    "caller_state.json",
+    "impresion.json"
+  ]
+}

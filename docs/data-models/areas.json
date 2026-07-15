@@ -1,0 +1,34 @@
+{
+  "entidad": "Area",
+  "descripcion": "Departamento o área de servicio (Caja, Información, Inscripciones, Documentación)",
+  "campos": {
+    "id": "int (PK, autoincremental)",
+    "nombre": "string (100) — Nombre del área",
+    "prefijo": "string (10) — Prefijo para código de ticket (CAJA, INFO, INSC, DOC)",
+    "logoUrl": "string? — URL o path del logo",
+    "activo": "bool — Si el área está habilitada",
+    "createdAt": "datetime?",
+    "updatedAt": "datetime?"
+  },
+  "request_crear": {
+    "nombre": "Caja",
+    "prefijo": "CAJA",
+    "logoUrl": ""
+  },
+  "request_actualizar": {
+    "id": 1,
+    "nombre": "Caja Principal",
+    "prefijo": "CAJA",
+    "activo": true,
+    "logoUrl": "preset:cash_register"
+  },
+  "response": {
+    "id": 1,
+    "nombre": "Caja",
+    "prefijo": "CAJA",
+    "logoUrl": "preset:cash_register",
+    "activo": true,
+    "createdAt": "2026-06-25T08:00:00",
+    "updatedAt": "2026-06-25T10:30:00"
+  }
+}

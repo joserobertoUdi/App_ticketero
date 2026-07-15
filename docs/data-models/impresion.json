@@ -1,0 +1,31 @@
+{
+  "descripcion": "Datos para impresión de ticket (ESC/POS)",
+  "ticket_print_data": {
+    "encabezado": "SISTEMA TICKETERO",
+    "direccion": "Av. Principal 123",
+    "telefono": "555-0123",
+    "codigoTicket": "CAJA-0042",
+    "area": "Caja",
+    "fecha": "25/06/2026",
+    "hora": "10:15:00",
+    "mensajeBienvenida": "Gracias por su espera",
+    "mensajeLlamado": "Pase a Caja 1",
+    "codigoBarras": "CAJA-0042",
+    "qrData": "https://sistema/ticket/CAJA-0042",
+    "footer": "Conserve su ticket para ser atendido"
+  },
+  "printer_config_network": {
+    "tipo": "network",
+    "host": "192.168.1.200",
+    "port": 9100,
+    "nombreImpresora": "Ticket Printer",
+    "charset": "CP850",
+    "paperWidthMm": 80
+  },
+  "printer_config_windows": {
+    "tipo": "windows",
+    "nombreImpresora": "EPSON TM-T20X",
+    "charset": "CP850",
+    "paperWidthMm": 80
+  }
+}

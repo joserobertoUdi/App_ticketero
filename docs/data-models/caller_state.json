@@ -1,0 +1,27 @@
+{
+  "descripcion": "Estado completo enviado desde la ventana principal a la ventana caller vía WindowMethodChannel",
+  "payload": {
+    "activeCodigo": "CAJA-0042",
+    "lastCalledCodigo": "CAJA-0042",
+    "lastCalledArea": "Caja",
+    "lastCalledPuesto": "Caja 1",
+    "lastCalledPriority": false,
+    "lastCalledDerivadoDe": null,
+    "lastCalledDerivadoDeNombre": null,
+    "recentCalls": [
+      {
+        "codigoTicket": "CAJA-0042",
+        "areaNombre": "Caja",
+        "areaId": 1,
+        "calledAt": "2026-06-25T10:16:00",
+        "prioridad": 0,
+        "derivadoDe": null,
+        "puesto": "Caja 1",
+        "status": "llamado"
+      }
+    ],
+    "history": [],
+    "historyCodigos": ["CAJA-0042"],
+    "videoCallerScreen": null
+  }
+}
