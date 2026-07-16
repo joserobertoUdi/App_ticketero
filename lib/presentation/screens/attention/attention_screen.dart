@@ -141,6 +141,7 @@ class _AttentionScreenState extends State<AttentionScreen>
     final success = await ticketProvider.startAttention(
       ticketProvider.activeAttention!.id,
       auth.user!.id,
+      puestoId: auth.puestoId ?? 1,
     );
     if (success && mounted) {
       _startTimer();

@@ -76,7 +76,6 @@ Future<void> main(List<String> args) async {
   });
 
   windowManager.setPreventClose(true);
-  windowManager.addListener(WindowCloseHandler());
 
   final webSocketService = WebSocketService();
   webSocketService.connect();
@@ -89,6 +88,9 @@ Future<void> main(List<String> args) async {
       apiClient,
     ),
   );
+  windowManager.addListener(WindowCloseHandler(
+    onClose: () => authProvider.logout(),
+  ));
   final ticketProvider = TicketProvider(
     ticketRepository: TicketRepositoryImpl(
       TicketRemoteDataSource(apiClient),
@@ -144,8 +146,15 @@ Future<void> main(List<String> args) async {
 }
 
 class WindowCloseHandler with WindowListener {
+  final Future<void> Function()? onClose;
+
+  WindowCloseHandler({this.onClose});
+
   @override
   void onWindowClose() async {
+    if (onClose != null) {
+      await onClose!();
+    }
     final prefs = await SharedPreferences.getInstance();
     final pos = await windowManager.getPosition();
     final size = await windowManager.getSize();

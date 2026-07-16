@@ -29,6 +29,10 @@ class ApiConstants {
   static const String dashboardPuestosStatus = '$apiPrefix/dashboard/puestos-status';
   static const String dashboardUserStats = '$apiPrefix/dashboard/user-stats';
   static const String dashboardExportPdf = '$apiPrefix/dashboard/export-pdf';
+  // Session endpoints (UsuariosController: api/usuarios)
+  static const String sessionBase = '$apiPrefix/usuarios';
+  static String openSession(int usuarioId) => '$sessionBase/$usuarioId/sesion';
+  static String closeSession(int sesionOperadorId) => '$sessionBase/sesion/$sesionOperadorId/cerrar';
   // Puestos by area
   static String puestosByArea(int areaId) => '$apiPrefix/areas/$areaId/puestos';
   // Servicios by area

@@ -90,6 +90,27 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, int>> openSession(int usuarioId, int puestoId) async {
+    try {
+      final data = await _remote.openSession(usuarioId, puestoId);
+      final sesionId = data['sesionOperadorId'] as int;
+      return Right(sesionId);
+    } catch (e) {
+      return Left(ServerFailure(message: 'Error al abrir sesión: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> closeSession(int sesionOperadorId) async {
+    try {
+      await _remote.closeSession(sesionOperadorId);
+      return Right(unit);
+    } catch (e) {
+      return Left(ServerFailure(message: 'Error al cerrar sesión: $e'));
+    }
+  }
+
+  @override
   Future<Either<Failure, bool>> isAuthenticated() async {
     try {
       final token = await _local.getToken();

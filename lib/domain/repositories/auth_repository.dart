@@ -26,4 +26,8 @@ abstract class AuthRepository {
   Future<void> logout();
 
   Future<Either<Failure, bool>> isAuthenticated();
+
+  Future<Either<Failure, int>> openSession(int usuarioId, int puestoId);
+
+  Future<Either<Failure, Unit>> closeSession(int sesionOperadorId);
 }

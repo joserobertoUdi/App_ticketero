@@ -25,4 +25,18 @@ class AuthRemoteDataSource {
     );
     return response.data as Map<String, dynamic>;
   }
+
+  Future<Map<String, dynamic>> openSession(int usuarioId, int puestoId) async {
+    final response = await _client.post(
+      ApiConstants.openSession(usuarioId),
+      data: {'usuarioId': usuarioId, 'puestoId': puestoId},
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<void> closeSession(int sesionOperadorId) async {
+    await _client.post(
+      ApiConstants.closeSession(sesionOperadorId),
+    );
+  }
 }

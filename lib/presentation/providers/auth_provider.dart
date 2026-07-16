@@ -14,6 +14,8 @@ class AuthProvider extends ChangeNotifier {
   String? _puestoSeleccionado;
   int? _puestoAreaId;
   int? _puestoId;
+  int? _sesionOperadorId;
+  DateTime? _fechaIngreso;
 
   AuthProvider({required AuthRepository authRepository})
       : _authRepository = authRepository;
@@ -27,11 +29,39 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _user != null && _token != null;
   String? get errorMessage => _errorMessage;
   String? get puestoSeleccionado => _puestoSeleccionado;
+  int? get puestoId => _puestoId;
+  int? get sesionOperadorId => _sesionOperadorId;
+  DateTime? get fechaIngreso => _fechaIngreso;
 
   void setPuestoSeleccionado(String puesto, {int? areaId, int? puestoId}) {
     _puestoSeleccionado = puesto;
     _puestoAreaId = areaId;
     _puestoId = puestoId;
+  }
+
+  Future<String?> openSession(int usuarioId, int puestoId) async {
+    final result = await _authRepository.openSession(usuarioId, puestoId);
+    return result.fold(
+      (failure) => failure.message,
+      (sesionId) {
+        _sesionOperadorId = sesionId;
+        _fechaIngreso = DateTime.now();
+        return null;
+      },
+    );
+  }
+
+  Future<String?> closeSession() async {
+    if (_sesionOperadorId == null) return null;
+    final result = await _authRepository.closeSession(_sesionOperadorId!);
+    return result.fold(
+      (failure) => failure.message,
+      (_) {
+        _sesionOperadorId = null;
+        _fechaIngreso = null;
+        return null;
+      },
+    );
   }
 
   bool get isAdmin => _user?.isAdmin ?? false;
@@ -70,7 +100,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    if (_puestoAreaId != null && _puestoId != null) {
+    if (_sesionOperadorId != null) {
+      await closeSession();
     }
     _user = null;
     _token = null;
@@ -78,6 +109,8 @@ class AuthProvider extends ChangeNotifier {
     _puestoSeleccionado = null;
     _puestoAreaId = null;
     _puestoId = null;
+    _sesionOperadorId = null;
+    _fechaIngreso = null;
     notifyListeners();
 
     await _authRepository.logout();

@@ -51,13 +51,26 @@ class _PuestoSelectionScreenState extends State<PuestoSelectionScreen> {
     if (mounted) setState(() => _isLoading = false);
   }
 
-  void _confirm() {
+  Future<void> _confirm() async {
     if (_selectedPuestoId == null || _areaId == null) return;
 
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final puesto = _puestos.firstWhere((p) => p.id == _selectedPuestoId);
     auth.setPuestoSeleccionado(puesto.nombre, areaId: _areaId, puestoId: _selectedPuestoId);
-    Navigator.pushReplacementNamed(context, '/attention');
+
+    final error = await auth.openSession(auth.user!.id, _selectedPuestoId!);
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al abrir sesión: $error'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/attention');
+    }
   }
 
   @override
@@ -76,12 +89,19 @@ class _PuestoSelectionScreenState extends State<PuestoSelectionScreen> {
                         children: [
                           Icon(Icons.info_outline, size: 48, color: AppColors.textSecondary),
                           const SizedBox(height: 16),
-                          const Text('No hay puestos configurados para su área',
+                          const Text('No hay puestos disponibles para su área',
                               style: TextStyle(fontSize: 18, color: AppColors.textSecondary)),
+                          const SizedBox(height: 8),
+                          const Text('Contacte al administrador',
+                              style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
                           const SizedBox(height: 24),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pushReplacementNamed(context, '/attention'),
-                            child: const Text('Continuar sin puesto'),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              Provider.of<AuthProvider>(context, listen: false).logout();
+                              Navigator.pushReplacementNamed(context, '/login');
+                            },
+                            icon: const Icon(Icons.logout),
+                            label: const Text('Cerrar sesión'),
                           ),
                         ],
                       )

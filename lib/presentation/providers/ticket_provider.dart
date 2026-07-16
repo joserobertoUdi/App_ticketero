@@ -205,13 +205,13 @@ class TicketProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> startAttention(int ticketId, int userId) async {
+  Future<bool> startAttention(int ticketId, int userId, {int puestoId = 1}) async {
     if (_activeAttention == null) return false;
     _isLoading = true;
     notifyListeners();
 
     try {
-      final result = await _ticketRepository.startAttention(ticketId, userId);
+      final result = await _ticketRepository.startAttention(ticketId, userId, puestoId: puestoId);
       return result.fold(
         (failure) {
           _errorMessage = failure.message;
