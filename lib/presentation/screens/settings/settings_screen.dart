@@ -6,8 +6,6 @@ import '../../providers/area_provider.dart';
 import '../../providers/settings_provider.dart';
 import 'widgets/user_management_panel.dart';
 import 'widgets/area_management_panel.dart';
-import 'widgets/system_config_panel.dart';
-import 'widgets/printer_config_panel.dart';
 import 'widgets/kiosko_media_panel.dart';
 import 'widgets/kioskos_administracion_panel.dart';
 
@@ -26,8 +24,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _PanelItem('Áreas', Icons.business, AreaManagementPanel()),
     _PanelItem('Kiosko Media', Icons.tv, KioskoMediaPanel()),
     _PanelItem('Kioskos Admin', Icons.document_scanner, KioskosAdministracionPanel()),
-    _PanelItem('Impresora', Icons.print, PrinterConfigPanel()),
-    _PanelItem('Sistema', Icons.settings, SystemConfigPanel()),
   ];
 
   @override

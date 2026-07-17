@@ -303,16 +303,6 @@ class _UserManagementPanelState extends State<UserManagementPanel> {
             onPressed: () => _showUserForm(user: u),
           ),
           IconButton(
-            icon: Icon(
-              u.activo ? Icons.visibility : Icons.visibility_off,
-              size: 18,
-              color: u.activo ? null : Colors.grey,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            onPressed: () => provider.toggleUserActive(u.id),
-          ),
-          IconButton(
             icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),

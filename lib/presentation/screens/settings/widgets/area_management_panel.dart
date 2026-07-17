@@ -235,14 +235,6 @@ class _AreaManagementPanelState extends State<AreaManagementPanel> {
                               onPressed: () => _showAreaForm(area: area),
                             ),
                             IconButton(
-                              icon: Icon(
-                                area.activo ? Icons.visibility : Icons.visibility_off,
-                                size: 20,
-                                color: area.activo ? null : Colors.grey,
-                              ),
-                              onPressed: () => areaProvider.toggleAreaActive(area.id),
-                            ),
-                            IconButton(
                               icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
                               onPressed: () => _confirmDelete(area),
                             ),
