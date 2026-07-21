@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 
+import '../../core/network/websocket_service.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'settings_provider.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
+  final WebSocketService? _webSocketService;
 
   User? _user;
   String? _token;
@@ -17,8 +19,9 @@ class AuthProvider extends ChangeNotifier {
   int? _sesionOperadorId;
   DateTime? _fechaIngreso;
 
-  AuthProvider({required AuthRepository authRepository})
-      : _authRepository = authRepository;
+  AuthProvider({required AuthRepository authRepository, WebSocketService? webSocketService})
+      : _authRepository = authRepository,
+        _webSocketService = webSocketService;
 
   void attachSettings(SettingsProvider settings) {
   }
@@ -87,6 +90,7 @@ class AuthProvider extends ChangeNotifier {
           _user = authResult.user;
           _token = authResult.token;
           _isLoading = false;
+          _webSocketService?.connect(token: authResult.token);
           notifyListeners();
           return true;
         },
@@ -113,6 +117,7 @@ class AuthProvider extends ChangeNotifier {
     _fechaIngreso = null;
     notifyListeners();
 
+    _webSocketService?.disconnect();
     await _authRepository.logout();
   }
 }

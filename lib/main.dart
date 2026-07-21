@@ -78,8 +78,6 @@ Future<void> main(List<String> args) async {
   windowManager.setPreventClose(true);
 
   final webSocketService = WebSocketService();
-  webSocketService.connect();
-
   final apiClient = ApiClient();
   final authProvider = AuthProvider(
     authRepository: AuthRepositoryImpl(
@@ -87,6 +85,7 @@ Future<void> main(List<String> args) async {
       AuthLocalDataSource(const FlutterSecureStorage()),
       apiClient,
     ),
+    webSocketService: webSocketService,
   );
   windowManager.addListener(WindowCloseHandler(
     onClose: () => authProvider.logout(),

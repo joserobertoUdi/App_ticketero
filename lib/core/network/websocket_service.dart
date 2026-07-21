@@ -10,6 +10,7 @@ class WebSocketService {
   Timer? _reconnectTimer;
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 10;
+  String? _token;
 
   final StreamController<Map<String, dynamic>> _eventController =
       StreamController<Map<String, dynamic>>.broadcast();
@@ -17,13 +18,19 @@ class WebSocketService {
   Stream<Map<String, dynamic>> get events => _eventController.stream;
   bool get isConnected => _isConnected;
 
-  Future<void> connect() async {
+  Future<void> connect({String? token}) async {
     if (_isConnected) return;
     _intentionalDisconnect = false;
+    _token = token;
 
     try {
       _hubConnection = HubConnectionBuilder()
-          .withUrl(ApiConstants.websocketUrl)
+          .withUrl(
+            ApiConstants.websocketUrl,
+            options: HttpConnectionOptions(
+              accessTokenFactory: () async => _token ?? '',
+            ),
+          )
           .withAutomaticReconnect()
           .build();
 
@@ -88,7 +95,7 @@ class WebSocketService {
         'Reintentando en ${delay.inSeconds}s (intento $_reconnectAttempts)');
 
     _reconnectTimer = Timer(delay, () {
-      connect();
+      connect(token: _token);
     });
   }
 
@@ -123,6 +130,7 @@ class WebSocketService {
     _reconnectTimer?.cancel();
     _reconnectAttempts = 0;
     _isConnected = false;
+    _token = null;
 
     try {
       await _hubConnection?.stop();
