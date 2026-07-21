@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/time_sync_service.dart';
 
 class TabOption {
   final String label;
@@ -43,25 +45,31 @@ class _TopBarState extends State<TopBar> {
   }
 
   void _updateDateTime() {
-    final now = DateTime.now();
-    final time =
-        '${now.hour.toString().padLeft(2, '0')}:'
-        '${now.minute.toString().padLeft(2, '0')}:'
-        '${now.second.toString().padLeft(2, '0')}';
-    final days = [
-      'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'
-    ];
-    final months = [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-    ];
-    final date =
-        '${days[now.weekday - 1]} ${now.day} de ${months[now.month - 1]} de ${now.year}';
-    if (mounted) {
-      setState(() {
-        _timeString = time;
-        _dateString = date;
-      });
+    try {
+      final sync = Provider.of<TimeSyncService>(context, listen: false);
+      if (mounted) {
+        setState(() {
+          _timeString = sync.formatServerTime();
+          _dateString = sync.formatServerDate();
+        });
+      }
+    } catch (_) {
+      final now = DateTime.now();
+      final time =
+          '${now.hour.toString().padLeft(2, '0')}:'
+          '${now.minute.toString().padLeft(2, '0')}:'
+          '${now.second.toString().padLeft(2, '0')}';
+      final days = [
+        'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'
+      ];
+      final months = [
+        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+      ];
+      final date =
+          '${days[now.weekday - 1]} ${now.day} de ${months[now.month - 1]} de ${now.year}';
+      _timeString = time;
+      _dateString = date;
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/enums/ticket_status.dart';
 import '../../core/enums/ticket_type.dart';
 import '../../core/printing/ticket_print_data.dart';
+import '../../core/utils/time_sync_service.dart';
 import '../../domain/entities/ticket.dart';
 import '../../domain/entities/attention_log.dart';
 import '../../domain/repositories/ticket_repository.dart';
@@ -34,6 +35,7 @@ class RecentCall {
 
 class TicketProvider extends ChangeNotifier {
   final TicketRepository _ticketRepository;
+  final TimeSyncService _timeSync;
 
   Ticket? _currentTicket;
   Ticket? _activeAttention;
@@ -45,8 +47,8 @@ class TicketProvider extends ChangeNotifier {
   String? _errorMessage;
   DateTime? _attentionStartedAt;
   bool _updatingFromChannel = false;
-  TicketProvider({required TicketRepository ticketRepository})
-      : _ticketRepository = ticketRepository;
+  TicketProvider({required this._ticketRepository, TimeSyncService? timeSync})
+      : _timeSync = timeSync ?? TimeSyncService();
 
   @override
   void notifyListeners() {
@@ -181,7 +183,7 @@ class TicketProvider extends ChangeNotifier {
               codigoTicket: ticket.codigoTicket,
               areaNombre: ticket.areaNombre,
               areaId: ticket.areaId,
-              calledAt: DateTime.now(),
+              calledAt: _timeSync.serverNow(),
               prioridad: ticket.prioridad,
               derivadoDe: ticket.derivadoDe,
               puesto: puesto,
@@ -223,7 +225,7 @@ class TicketProvider extends ChangeNotifier {
           _activeAttention = _activeAttention!.copyWith(
             status: TicketStatus.en_atencion,
           );
-          _attentionStartedAt = DateTime.now();
+          _attentionStartedAt = _timeSync.serverNow();
           _updateRecentCallStatus(_activeAttention!.codigoTicket, 'en_atencion');
           _isLoading = false;
           notifyListeners();
@@ -272,9 +274,10 @@ class TicketProvider extends ChangeNotifier {
         (ticket) {
           // Gap 12: usar tiempoAtencionSegundos que devuelve el servidor
           // en lugar de calcular con reloj local (puede diferir por zona horaria)
+          final serverNow = _timeSync.serverNow();
           final duracion = ticket.tiempoAtencionSegundos
               ?? (_attentionStartedAt != null
-                  ? DateTime.now().difference(_attentionStartedAt!).inSeconds
+                  ? serverNow.difference(_attentionStartedAt!).inSeconds
                   : 0);
 
           _activeAttention = _activeAttention!.copyWith(
@@ -292,7 +295,7 @@ class TicketProvider extends ChangeNotifier {
               areaId: _activeAttention!.areaId,
               areaNombre: _activeAttention!.areaNombre,
               llamadoAt: _activeAttention!.createdAt,
-              completadoAt: DateTime.now(),
+              completadoAt: serverNow,
               observacion: observacion,
               tiempoSegundos: duracion,
             ),
@@ -323,7 +326,7 @@ class TicketProvider extends ChangeNotifier {
     final ticket = _currentTicket;
     if (ticket == null) return null;
 
-    final now = DateTime.now();
+    final now = _timeSync.serverNow().toLocal();
     final dateStr =
         '${now.day.toString().padLeft(2, '0')}/'
         '${now.month.toString().padLeft(2, '0')}/'
@@ -438,28 +441,28 @@ class TicketProvider extends ChangeNotifier {
         orElse: () => TicketType.incidente,
       );
       _lastCalledTicket = Ticket(
-        id: state.lastCalledTicketId ?? DateTime.now().millisecondsSinceEpoch,
+        id: state.lastCalledTicketId ?? _timeSync.serverNow().millisecondsSinceEpoch,
         codigoTicket: state.lastCalledCodigo ?? state.activeCodigo ?? '',
         tipoTicket: tipoTicket,
         areaId: state.lastCalledAreaId,
         areaNombre: state.lastCalledArea ?? '',
         llamadoPorUserName: state.lastCalledUserName,
         status: TicketStatus.pendiente,
-        createdAt: DateTime.now(),
+        createdAt: _timeSync.serverNow(),
         prioridad: state.lastCalledPriority ? 1 : 0,
         derivadoDe: state.lastCalledDerivadoDe,
         derivadoDeNombre: state.lastCalledDerivadoDeNombre,
       );
       if (state.activeCodigo != null) {
         _activeAttention = Ticket(
-          id: state.activeTicketId ?? state.lastCalledTicketId ?? DateTime.now().millisecondsSinceEpoch,
+          id: state.activeTicketId ?? state.lastCalledTicketId ?? _timeSync.serverNow().millisecondsSinceEpoch,
           codigoTicket: state.activeCodigo ?? '',
           tipoTicket: tipoTicket,
           areaId: state.lastCalledAreaId,
           areaNombre: state.lastCalledArea ?? '',
           llamadoPorUserName: state.lastCalledUserName,
-          status: TicketStatus.en_atencion,
-          createdAt: DateTime.now(),
+        status: TicketStatus.en_atencion,
+        createdAt: _timeSync.serverNow(),
           prioridad: state.lastCalledPriority ? 1 : 0,
           derivadoDe: state.lastCalledDerivadoDe,
           derivadoDeNombre: state.lastCalledDerivadoDeNombre,
@@ -472,7 +475,7 @@ class TicketProvider extends ChangeNotifier {
         codigoTicket: r['codigoTicket'] as String? ?? '',
         areaNombre: r['areaNombre'] as String? ?? '',
         areaId: r['areaId'] as int? ?? 0,
-        calledAt: DateTime.tryParse(r['calledAt'] as String? ?? '') ?? DateTime.now(),
+        calledAt: DateTime.tryParse(r['calledAt'] as String? ?? '') ?? _timeSync.serverNow(),
         prioridad: r['prioridad'] as int? ?? 0,
         derivadoDe: r['derivadoDe'] as String?,
         puesto: r['puesto'] as String?,
@@ -488,7 +491,7 @@ class TicketProvider extends ChangeNotifier {
         codigoTicket: h['codigoTicket'] as String?,
         areaId: h['areaId'] as int?,
         areaNombre: h['areaNombre'] as String?,
-        llamadoAt: DateTime.now(),
+        llamadoAt: _timeSync.serverNow(),
         observacion: h['observacion'] as String?,
         tiempoSegundos: h['tiempoSegundos'] as int?,
       ));

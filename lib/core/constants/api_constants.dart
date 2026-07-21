@@ -29,6 +29,8 @@ class ApiConstants {
   static const String dashboardPuestosStatus = '$apiPrefix/dashboard/puestos-status';
   static const String dashboardUserStats = '$apiPrefix/dashboard/user-stats';
   static const String dashboardExportPdf = '$apiPrefix/dashboard/export-pdf';
+  // Time sync
+  static const String timeEndpoint = '$apiPrefix/time';
   // Session endpoints (UsuariosController: api/usuarios)
   static const String sessionBase = '$apiPrefix/usuarios';
   static String openSession(int usuarioId) => '$sessionBase/$usuarioId/sesion';

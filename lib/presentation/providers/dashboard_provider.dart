@@ -4,12 +4,14 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/network/api_client.dart';
+import '../../core/utils/time_sync_service.dart';
 import '../../data/datasources/remote/dashboard_remote_datasource.dart';
 import '../../domain/entities/dashboard_stats.dart';
 import '../../domain/repositories/dashboard_repository.dart';
 
 class DashboardProvider extends ChangeNotifier {
   final DashboardRepository _dashboardRepository;
+  final TimeSyncService _timeSync;
   late final DashboardRemoteDataSource _remote;
 
   DashboardStats? _summary;
@@ -25,9 +27,10 @@ class DashboardProvider extends ChangeNotifier {
   static final Duration _cacheDuration = Duration(seconds: AppConstants.dashboardCacheSeconds);
 
   DashboardProvider({
-    required DashboardRepository dashboardRepository,
+    required this._dashboardRepository,
     ApiClient? apiClient,
-  }) : _dashboardRepository = dashboardRepository,
+    TimeSyncService? timeSync,
+  }) : _timeSync = timeSync ?? TimeSyncService(),
        _remote = DashboardRemoteDataSource(
            apiClient ?? ApiClient());
 
@@ -50,7 +53,7 @@ class DashboardProvider extends ChangeNotifier {
 
   bool get _isCacheStale {
     if (_lastLoadedAt == null) return true;
-    return DateTime.now().millisecondsSinceEpoch - _lastLoadedAt! > _cacheDuration.inMilliseconds;
+    return _timeSync.serverNow().millisecondsSinceEpoch - _lastLoadedAt! > _cacheDuration.inMilliseconds;
   }
 
   void setPeriod(DashboardPeriod period) {
@@ -65,19 +68,19 @@ class DashboardProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final now = DateTime.now();
+      final now = _timeSync.serverNow();
       DateTime fechaInicio, fechaFin;
 
       switch (_selectedPeriod) {
         case DashboardPeriod.hoy:
-          fechaInicio = DateTime(now.year, now.month, now.day);
+          fechaInicio = DateTime.utc(now.year, now.month, now.day);
           fechaFin = fechaInicio.add(const Duration(days: 1));
         case DashboardPeriod.semana:
-          fechaInicio = now.subtract(Duration(days: now.weekday - 1));
+          fechaInicio = DateTime.utc(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
           fechaFin = fechaInicio.add(const Duration(days: 7));
         case DashboardPeriod.mes:
-          fechaInicio = DateTime(now.year, now.month, 1);
-          fechaFin = DateTime(now.year, now.month + 1, 1);
+          fechaInicio = DateTime.utc(now.year, now.month, 1);
+          fechaFin = DateTime.utc(now.year, now.month + 1, 1);
       }
 
       final bytes = await _remote.getExportPdf(
@@ -114,19 +117,19 @@ class DashboardProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final now = DateTime.now();
+      final now = _timeSync.serverNow();
       DateTime fechaInicio, fechaFin;
 
       switch (_selectedPeriod) {
         case DashboardPeriod.hoy:
-          fechaInicio = DateTime(now.year, now.month, now.day);
+          fechaInicio = DateTime.utc(now.year, now.month, now.day);
           fechaFin = fechaInicio.add(const Duration(days: 1));
         case DashboardPeriod.semana:
-          fechaInicio = now.subtract(Duration(days: now.weekday - 1));
+          fechaInicio = DateTime.utc(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
           fechaFin = fechaInicio.add(const Duration(days: 7));
         case DashboardPeriod.mes:
-          fechaInicio = DateTime(now.year, now.month, 1);
-          fechaFin = DateTime(now.year, now.month + 1, 1);
+          fechaInicio = DateTime.utc(now.year, now.month, 1);
+          fechaFin = DateTime.utc(now.year, now.month + 1, 1);
       }
 
       final summaryF = _dashboardRepository.getSummary(fechaInicio: fechaInicio, fechaFin: fechaFin);
@@ -158,7 +161,7 @@ class DashboardProvider extends ChangeNotifier {
         (breakdown) => _hourlyBreakdown = breakdown,
       );
 
-      _lastLoadedAt = DateTime.now().millisecondsSinceEpoch;
+      _lastLoadedAt = _timeSync.serverNow().millisecondsSinceEpoch;
       _isLoading = false;
       notifyListeners();
     } catch (e) {

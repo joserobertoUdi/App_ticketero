@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +12,7 @@ import 'app.dart';
 import 'core/network/api_client.dart';
 import 'core/network/websocket_service.dart';
 import 'core/printing/printing_provider.dart';
+import 'core/utils/time_sync_service.dart';
 import 'data/datasources/local/auth_local_datasource.dart';
 import 'data/datasources/local/ticket_local_datasource.dart';
 import 'data/datasources/remote/area_remote_datasource.dart';
@@ -77,6 +80,9 @@ Future<void> main(List<String> args) async {
 
   windowManager.setPreventClose(true);
 
+  final timeSyncService = TimeSyncService();
+  unawaited(timeSyncService.initialize());
+
   final webSocketService = WebSocketService();
   final apiClient = ApiClient();
   final authProvider = AuthProvider(
@@ -95,6 +101,7 @@ Future<void> main(List<String> args) async {
       TicketRemoteDataSource(apiClient),
       TicketLocalDataSource(),
     ),
+    timeSync: timeSyncService,
   );
   final settingsProvider = SettingsProvider();
 
@@ -105,6 +112,7 @@ Future<void> main(List<String> args) async {
       DashboardRemoteDataSource(apiClient),
     ),
     apiClient: apiClient,
+    timeSync: timeSyncService,
   );
   final areaProvider = AreaProvider(
     areaRepository: AreaRepositoryImpl(
@@ -127,6 +135,7 @@ Future<void> main(List<String> args) async {
   runApp(
     MultiProvider(
       providers: [
+        Provider<TimeSyncService>.value(value: timeSyncService),
         Provider<ApiClient>.value(value: apiClient),
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider.value(value: ticketProvider),
