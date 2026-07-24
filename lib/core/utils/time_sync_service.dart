@@ -13,7 +13,7 @@ class TimeSyncService {
   Timer? _syncTimer;
 
   static const Duration _syncInterval = Duration(minutes: 5);
-  static const Duration _maxDrift = Duration(seconds: 2);
+  static const Duration _maxDrift = Duration(seconds: 5);
 
   bool get isSynced => _synced;
 

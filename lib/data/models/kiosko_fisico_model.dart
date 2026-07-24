@@ -7,7 +7,6 @@ class KioskoFisicoModel {
   final String ubicacion;
   final int ubicacionId;
   final String? ubicacionNombre;
-  final int? kioskoMediaId;
   final bool activo;
   final bool esHuerfano;
   final List<int> areaIds;
@@ -41,7 +40,6 @@ class KioskoFisicoModel {
     this.ubicacion = '',
     this.ubicacionId = 1,
     this.ubicacionNombre,
-    this.kioskoMediaId,
     this.activo = true,
     this.esHuerfano = false,
     this.areaIds = const [],
@@ -77,7 +75,6 @@ class KioskoFisicoModel {
       ubicacion: (json['ubicacion'] as String?) ?? '',
       ubicacionId: (json['ubicacionId'] as int?) ?? 1,
       ubicacionNombre: json['ubicacionNombre'] as String?,
-      kioskoMediaId: json['kioskoMediaId'] as int?,
       activo: (json['activo'] as bool?) ?? true,
       esHuerfano: (json['esHuerfano'] as bool?) ?? false,
       areaIds: json['areaIds'] != null && json['areaIds'] is List
@@ -117,7 +114,6 @@ class KioskoFisicoModel {
         'nombre': nombre,
         'ubicacion': ubicacion,
         'ubicacionId': ubicacionId,
-        'kioskoMediaId': kioskoMediaId,
         'esHuerfano': esHuerfano,
         'areaIds': areaIds,
         if (logoUrl != null) 'logoUrl': logoUrl,
@@ -153,7 +149,6 @@ class KioskoFisicoModel {
       ubicacion: ubicacion,
       ubicacionId: ubicacionId,
       ubicacionNombre: ubicacionNombre,
-      kioskoMediaId: kioskoMediaId,
       activo: activo,
       esHuerfano: esHuerfano,
       areaIds: areaIds,

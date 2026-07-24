@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +6,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../core/network/api_client.dart';
 import '../core/theme/app_theme.dart';
+import '../core/utils/time_sync_service.dart';
 import '../data/datasources/local/auth_local_datasource.dart';
 import '../data/datasources/local/ticket_local_datasource.dart';
 import '../data/datasources/remote/auth_remote_datasource.dart';
@@ -39,6 +41,9 @@ class _CallerWindowAppState extends State<CallerWindowApp>
   Future<void> _initWindow() async {
     await windowManager.show();
     await windowManager.focus();
+    // Inicializar sincronización horaria con el servidor
+    final timeSync = TimeSyncService();
+    unawaited(timeSync.initialize());
   }
 
   @override
@@ -55,6 +60,7 @@ class _CallerWindowAppState extends State<CallerWindowApp>
   @override
   Widget build(BuildContext context) {
     final apiClient = ApiClient();
+    final timeSyncService = TimeSyncService();
     return MaterialApp(
       title: 'Sistema Ticketero - Llamador',
       theme: AppTheme.lightTheme,
@@ -62,6 +68,7 @@ class _CallerWindowAppState extends State<CallerWindowApp>
       home: MultiProvider(
         providers: [
           Provider<ApiClient>.value(value: apiClient),
+          Provider<TimeSyncService>.value(value: timeSyncService),
           ChangeNotifierProvider(create: (_) => AuthProvider(
             authRepository: AuthRepositoryImpl(
               AuthRemoteDataSource(apiClient),
@@ -74,6 +81,7 @@ class _CallerWindowAppState extends State<CallerWindowApp>
               TicketRemoteDataSource(apiClient),
               TicketLocalDataSource(),
             ),
+            timeSync: timeSyncService,
           )),
           ChangeNotifierProvider(create: (_) => SettingsProvider()),
           ChangeNotifierProvider(create: (_) => KioskoFisicoProvider(
@@ -115,11 +123,8 @@ class _CallerWindowScreenState extends State<CallerWindowScreen> {
       final activos = kioskoProvider.kioskosActivos;
       if (activos.isNotEmpty) {
         final k = activos.first;
-        // Siempre usamos el kioskoMediaId del backend y las URLs directas del kiosko físico
-        // No dependemos de si el media existe en la lista local de SharedPreferences
         await sp.setSelectedKioskoId(
           k.id,
-          kioskoMediaId: k.kioskoMediaId,
           areaIds: k.areaIds,
           logoUrl: k.logoUrl,
           videoUrl: k.videoUrl,

@@ -15,7 +15,6 @@ class SettingsProvider extends ChangeNotifier {
 
   List<KioskoMedia> _kioskoLocations = [];
   int? _selectedKioskoId;
-  int? _selectedKioskoMediaId;
   Set<int> _selectedKioskoAreaIds = {};
   String? _selectedKioskoLogoUrl;
   String? _selectedKioskoVideoUrl;
@@ -25,7 +24,6 @@ class SettingsProvider extends ChangeNotifier {
 
   static const _keyKioskoMedias = 'kiosko_locations';
   static const _keySelectedKiosko = 'selected_kiosko_id';
-  static const _keySelectedKioskoMedia = 'selected_kiosko_media_id';
   static const _keySelectedKioskoAreas = 'selected_kiosko_area_ids';
   static const _keySelectedKioskoLogo = 'selected_kiosko_logo_url';
   static const _keySelectedKioskoVideo = 'selected_kiosko_video_url';
@@ -53,14 +51,11 @@ class SettingsProvider extends ChangeNotifier {
 
   KioskoMedia? get selectedKiosko {
     if (_selectedKioskoId == null) return null;
-    final mediaId = _selectedKioskoMediaId ?? _selectedKioskoId;
     try {
-      return _kioskoLocations.firstWhere((k) => k.id == mediaId);
+      return _kioskoLocations.firstWhere((k) => k.id == _selectedKioskoId);
     } catch (_) {
-      // Si el KioskoMedia local no existe, siempre construimos uno con los valores
-      // directos del kiosko físico (logoUrl/videoUrl vienen del backend)
       return KioskoMedia(
-        id: _selectedKioskoMediaId ?? _selectedKioskoId!,
+        id: _selectedKioskoId!,
         nombre: _selectedKioskoNombre,
         areaIds: _selectedKioskoAreaIds,
         logoUrl: _selectedKioskoLogoUrl ?? '',
@@ -172,9 +167,8 @@ class SettingsProvider extends ChangeNotifier {
   String? get selectedKioskoVideoUrl => _selectedKioskoVideoUrl;
   String get selectedKioskoNombre => _selectedKioskoNombre;
 
-  Future<void> setSelectedKioskoId(int? id, {int? kioskoMediaId, List<int>? areaIds, String? logoUrl, String? videoUrl, String? nombre}) async {
+  Future<void> setSelectedKioskoId(int? id, {List<int>? areaIds, String? logoUrl, String? videoUrl, String? nombre}) async {
     _selectedKioskoId = id;
-    _selectedKioskoMediaId = kioskoMediaId;
     _selectedKioskoAreaIds = areaIds?.toSet() ?? {};
     // Siempre actualizamos, aunque sea null, para no mantener valores stale de una sesión anterior
     _selectedKioskoLogoUrl = logoUrl?.isNotEmpty == true ? logoUrl : null;
@@ -183,11 +177,6 @@ class SettingsProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     if (id != null) {
       await prefs.setString(_keySelectedKiosko, id.toString());
-      if (kioskoMediaId != null) {
-        await prefs.setString(_keySelectedKioskoMedia, kioskoMediaId.toString());
-      } else {
-        await prefs.remove(_keySelectedKioskoMedia);
-      }
       await prefs.setString(_keySelectedKioskoAreas, (areaIds ?? []).join(','));
       // Siempre persistir logo/video: si hay valor lo guardamos, si no lo borramos
       if (logoUrl != null && logoUrl.isNotEmpty) {
@@ -203,7 +192,6 @@ class SettingsProvider extends ChangeNotifier {
       if (nombre != null) await prefs.setString(_keySelectedKioskoNombre, nombre);
     } else {
       await prefs.remove(_keySelectedKiosko);
-      await prefs.remove(_keySelectedKioskoMedia);
       await prefs.remove(_keySelectedKioskoAreas);
       await prefs.remove(_keySelectedKioskoLogo);
       await prefs.remove(_keySelectedKioskoVideo);
@@ -271,11 +259,6 @@ class SettingsProvider extends ChangeNotifier {
       final selectedStr = prefs.getString(_keySelectedKiosko);
       if (selectedStr != null && selectedStr.isNotEmpty) {
         _selectedKioskoId = int.tryParse(selectedStr);
-      }
-
-      final mediaIdStr = prefs.getString(_keySelectedKioskoMedia);
-      if (mediaIdStr != null && mediaIdStr.isNotEmpty) {
-        _selectedKioskoMediaId = int.tryParse(mediaIdStr);
       }
 
       final areasStr = prefs.getString(_keySelectedKioskoAreas);

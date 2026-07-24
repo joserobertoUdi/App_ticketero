@@ -13,7 +13,6 @@ import '../../../providers/kiosko_fisico_provider.dart';
 import '../../../providers/settings_provider.dart';
 import '../../../../domain/entities/activo_fijo.dart';
 import '../../../../domain/entities/kiosko_fisico.dart';
-import '../../../../domain/entities/kiosko_media.dart';
 import 'printer_config_panel.dart';
 
 class KioskosAdministracionPanel extends StatefulWidget {
@@ -119,8 +118,6 @@ class _KioskosAdministracionPanelState
 
   Widget _buildKioskoCard(BuildContext context, KioskoFisico k,
       KioskoFisicoProvider provider, SettingsProvider settings) {
-    final media = _findMedia(settings, k.kioskoMediaId);
-
     return SizedBox(
       width: 380,
       child: Card(
@@ -174,7 +171,10 @@ class _KioskosAdministracionPanelState
               ),
               const Divider(),
               _infoRow(Icons.location_on, 'Ubicación', k.ubicacion),
-              if (media != null) _infoRow(Icons.tv, 'Media', media.nombre),
+              if (k.logoUrl != null && k.logoUrl!.isNotEmpty)
+                _infoRow(Icons.image, 'Logo', k.logoUrl!),
+              if (k.videoUrl != null && k.videoUrl!.isNotEmpty)
+                _infoRow(Icons.videocam, 'Video', k.videoUrl!),
               if (k.areaIds.isNotEmpty)
                 _infoRow(Icons.category, 'Áreas', '${k.areaIds.length} asignadas'),
               if (k.ipKiosko != null)
@@ -188,15 +188,6 @@ class _KioskosAdministracionPanelState
         ),
       ),
     );
-  }
-
-  KioskoMedia? _findMedia(SettingsProvider sp, int? mediaId) {
-    if (mediaId == null) return null;
-    try {
-      return sp.kioskoLocations.firstWhere((m) => m.id == mediaId);
-    } catch (_) {
-      return null;
-    }
   }
 
   IconData _statusIcon(bool activo) =>
@@ -278,8 +269,11 @@ class _KioskosAdministracionPanelState
         TextEditingController(text: (existing?.anchoPapelMM ?? 80).toString());
     final copiasCtrl =
         TextEditingController(text: (existing?.copias ?? 1).toString());
+    final logoUrlCtrl =
+        TextEditingController(text: existing?.logoUrl ?? '');
+    final videoUrlCtrl =
+        TextEditingController(text: existing?.videoUrl ?? '');
 
-    int? selectedMediaId = existing?.kioskoMediaId;
     int? selectedUbicacionId = existing?.ubicacionId;
     bool dhcp = existing?.dhcp ?? true;
     bool impresionAutomatica = existing?.impresionAutomatica ?? true;
@@ -420,75 +414,19 @@ class _KioskosAdministracionPanelState
                           ],
                         ),
                         const SizedBox(height: 8),
-                        DropdownButtonFormField<int?>(
-                          initialValue: selectedMediaId,
-                          decoration: const InputDecoration(
-                              labelText: 'Kiosko Media',
-                              border: OutlineInputBorder()),
-                          items: [
-                            const DropdownMenuItem(
-                                value: null, child: Text('Sin media')),
-                            ...context
-                                .read<SettingsProvider>()
-                                .kioskoLocations
-                                .map((m) => DropdownMenuItem(
-                                    value: m.id, child: Text(m.nombre))),
-                          ],
-                          onChanged: (v) => setDialogState(() {
-                                selectedMediaId = v;
-                                if (v != null) {
-                                  final media = context
-                                      .read<SettingsProvider>()
-                                      .kioskoLocations
-                                      .where((m) => m.id == v)
-                                      .firstOrNull;
-                                  if (media != null) {
-                                    selectedAreaIds =
-                                        media.areaIds.toList();
-                                  }
-                                }
-                              }),
-                        ),
-                        if (selectedMediaId != null) ...[
-                          const SizedBox(height: 8),
-                          Builder(builder: (ctx) {
-                            final media = context
-                                .read<SettingsProvider>()
-                                .kioskoLocations
-                                .where(
-                                    (m) => m.id == selectedMediaId)
-                                .firstOrNull;
-                            if (media == null) return const SizedBox.shrink();
-                            return Card(
-                              color: Colors.grey.shade100,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Multimedia: ${media.nombre}',
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13)),
-                                    if (media.logoUrl.isNotEmpty)
-                                      Text('Logo: ${media.logoUrl}',
-                                          style: const TextStyle(
-                                              fontSize: 12)),
-                                    if (media.videoUrl.isNotEmpty)
-                                      Text('Video: ${media.videoUrl}',
-                                          style: const TextStyle(
-                                              fontSize: 12)),
-                                    Text(
-                                        'Áreas: ${media.areaIds.length} asignadas',
-                                        style: const TextStyle(
-                                            fontSize: 12)),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }),
-                        ],
+                        TextField(
+                            controller: logoUrlCtrl,
+                            decoration: const InputDecoration(
+                                labelText: 'URL del Logo',
+                                hintText: 'https://ejemplo.com/logo.png',
+                                border: OutlineInputBorder())),
+                        const SizedBox(height: 8),
+                        TextField(
+                            controller: videoUrlCtrl,
+                            decoration: const InputDecoration(
+                                labelText: 'URL del Video',
+                                hintText: 'https://ejemplo.com/video.mp4',
+                                border: OutlineInputBorder())),
                         const SizedBox(height: 16),
                         _sectionHeader(Icons.category, 'Asignación de Áreas'),
                         const SizedBox(height: 8),
@@ -1002,7 +940,6 @@ class _KioskosAdministracionPanelState
                             'nombre': nameCtrl.text,
                             'ubicacion': ubicCtrl.text,
                             'ubicacionId': selectedUbicacionId ?? 1,
-                            'kioskoMediaId': selectedMediaId,
                             'areaIds': selectedAreaIds,
                             'activo': activo,
                             'ipKiosko': ipKioskoCtrl.text.isNotEmpty
@@ -1044,6 +981,12 @@ class _KioskosAdministracionPanelState
                                 : null,
                             'dnsSecundario': dnsSecundarioCtrl.text.isNotEmpty
                                 ? dnsSecundarioCtrl.text
+                                : null,
+                            'logoUrl': logoUrlCtrl.text.isNotEmpty
+                                ? logoUrlCtrl.text
+                                : null,
+                            'videoUrl': videoUrlCtrl.text.isNotEmpty
+                                ? videoUrlCtrl.text
                                 : null,
                             'activosFijos': activosFijos
                                 .map((a) => a.toJson())
@@ -1293,7 +1236,7 @@ class _KioskosAdministracionPanelState
     try {
       final dio = Dio();
       final response = await dio
-          .get('${_sysServerCtrl.text}/api/health')
+          .get('${_sysServerCtrl.text}/healthz')
           .timeout(const Duration(seconds: 5));
       setState(() {
         _sysTestResult = response.statusCode == 200

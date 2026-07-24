@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,8 +9,8 @@ import '../../../core/printing/printing_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/area_logo_presets.dart';
 import '../../../core/utils/image_utils.dart';
+import '../../../core/utils/time_sync_service.dart';
 import '../../../domain/entities/kiosko_fisico.dart';
-import '../../../domain/entities/kiosko_media.dart';
 import '../../providers/area_provider.dart';
 import '../../providers/kiosko_fisico_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -22,12 +24,22 @@ class KioskoSelectionScreen extends StatefulWidget {
 
 class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
   bool _autoRegistering = false;
+  bool _syncingTime = true;
   String? _autoError;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _tryAutoRegister());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _initTimeSync();
+      _tryAutoRegister();
+    });
+  }
+
+  Future<void> _initTimeSync() async {
+    final timeSync = TimeSyncService();
+    await timeSync.initialize();
+    if (mounted) setState(() => _syncingTime = false);
   }
 
   Future<void> _tryAutoRegister() async {
@@ -38,7 +50,7 @@ class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
       await kf.loadAll();
       final existing = kf.kioskos.where((k) => k.id == settings.selectedKioskoId).firstOrNull;
       if (existing != null) {
-        await settings.setSelectedKioskoId(existing.id, kioskoMediaId: existing.kioskoMediaId, areaIds: existing.areaIds, logoUrl: existing.logoUrl, videoUrl: existing.videoUrl, nombre: existing.nombre);
+        await settings.setSelectedKioskoId(existing.id, areaIds: existing.areaIds, logoUrl: existing.logoUrl, videoUrl: existing.videoUrl, nombre: existing.nombre);
         await _loadPrinterConfig(existing.id);
         if (mounted) Navigator.pushReplacementNamed(context, '/ticket');
         return;
@@ -48,11 +60,11 @@ class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
 
     setState(() => _autoRegistering = true);
     try {
-      final providers = <String, String>{
-        'ipEquipo': '',
-        'mascaraRedEquipo': '',
-        'gatewayEquipo': '',
-        'dnsEquipo': '',
+      final providers = <String, String?>{
+        'ipEquipo': null,
+        'mascaraRedEquipo': null,
+        'gatewayEquipo': null,
+        'dnsEquipo': null,
       };
       try {
         final interfaces = await NetworkInterface.list();
@@ -63,14 +75,66 @@ class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
               break;
             }
           }
-          if (providers['ipEquipo']!.isNotEmpty) break;
+          if (providers['ipEquipo'] != null) break;
         }
       } catch (_) {}
+
+      try {
+        final result = await Process.run('powershell', [
+          '-Command',
+          'Get-NetIPAddress -AddressFamily IPv4 | Where-Object { \$_.InterfaceAlias -ne "Loopback" } | '
+              'Select-Object IPAddress,PrefixLength,InterfaceIndex | ConvertTo-Json'
+        ]);
+        if (result.exitCode == 0 && result.stdout.toString().isNotEmpty) {
+          final decoded = jsonDecode(result.stdout.toString());
+          final list = decoded is List ? decoded : [decoded];
+          if (providers['ipEquipo'] == null && list.isNotEmpty) {
+            providers['ipEquipo'] = list[0]['IPAddress']?.toString();
+          }
+          if (list.isNotEmpty && providers['ipEquipo'] != null) {
+            final prefix = list[0]['PrefixLength'];
+            if (prefix != null) {
+              final cidr = int.tryParse(prefix.toString());
+              if (cidr != null) {
+                if (cidr == 24) providers['mascaraRedEquipo'] = '255.255.255.0';
+                else if (cidr == 16) providers['mascaraRedEquipo'] = '255.255.0.0';
+                else if (cidr == 8) providers['mascaraRedEquipo'] = '255.0.0.0';
+              }
+            }
+          }
+        }
+      } catch (_) {}
+
+      if (providers['gatewayEquipo'] == null) {
+        try {
+          final gw = await Process.run('powershell', [
+            '-Command',
+            '(Get-NetRoute -DestinationPrefix "0.0.0.0/0" | Select-Object -First 1).NextHop'
+          ]);
+          if (gw.exitCode == 0) {
+            final gwStr = gw.stdout.toString().trim();
+            if (gwStr.isNotEmpty) providers['gatewayEquipo'] = gwStr;
+          }
+        } catch (_) {}
+      }
+
+      if (providers['dnsEquipo'] == null) {
+        try {
+          final dns = await Process.run('powershell', [
+            '-Command',
+            '(Get-DnsClientServerAddress -AddressFamily IPv4 | Select-Object -First 1).ServerAddresses -join ","'
+          ]);
+          if (dns.exitCode == 0) {
+            final dnsStr = dns.stdout.toString().trim();
+            if (dnsStr.isNotEmpty) providers['dnsEquipo'] = dnsStr;
+          }
+        } catch (_) {}
+      }
 
       final kf = context.read<KioskoFisicoProvider>();
       final kiosko = await kf.autoRegistrar(providers);
       if (kiosko != null && mounted) {
-        await settings.setSelectedKioskoId(kiosko.id, kioskoMediaId: kiosko.kioskoMediaId, areaIds: kiosko.areaIds, logoUrl: kiosko.logoUrl, videoUrl: kiosko.videoUrl, nombre: kiosko.nombre);
+        await settings.setSelectedKioskoId(kiosko.id, areaIds: kiosko.areaIds, logoUrl: kiosko.logoUrl, videoUrl: kiosko.videoUrl, nombre: kiosko.nombre);
         await _loadPrinterConfig(kiosko.id);
         if (mounted) Navigator.pushReplacementNamed(context, '/ticket');
         return;
@@ -108,15 +172,6 @@ class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
     ));
   }
 
-  KioskoMedia? _findMedia(SettingsProvider sp, int? mediaId) {
-    if (mediaId == null) return null;
-    try {
-      return sp.kioskoLocations.firstWhere((m) => m.id == mediaId);
-    } catch (_) {
-      return null;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -127,6 +182,17 @@ class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
           child: Center(
             child: Consumer3<KioskoFisicoProvider, SettingsProvider, AreaProvider>(
               builder: (context, kfProvider, settings, areaProvider, _) {
+                if (_syncingTime) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      const Text('Sincronizando hora con el servidor...',
+                          style: TextStyle(fontSize: 16, color: AppColors.textSecondary)),
+                    ],
+                  );
+                }
                 if (_autoRegistering || kfProvider.isLoading) {
                   return Column(
                     mainAxisSize: MainAxisSize.min,
@@ -156,11 +222,36 @@ class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
                     ],
                   );
                 }
+                final timeSync = context.read<TimeSyncService>();
+
                 return SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (timeSync.isSynced && !timeSync.isDriftAcceptable)
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.access_time, size: 20, color: Colors.orange),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'La hora del equipo está desviada ${timeSync.offset.inSeconds.abs()}s respecto al servidor. Se usará la hora sincronizada.',
+                                  style: const TextStyle(fontSize: 13, color: Colors.orange),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       Icon(Icons.document_scanner, size: 64, color: AppColors.primary),
                       const SizedBox(height: 16),
                       const Text('Seleccione el kiosko',
@@ -173,7 +264,7 @@ class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
                       const SizedBox(height: 32),
                       ...kioskos.map((k) => Padding(
                             padding: const EdgeInsets.only(bottom: 16),
-                            child: _buildKioskoCard(context, k, _findMedia(settings, k.kioskoMediaId), areaProvider, settings),
+                            child: _buildKioskoCard(context, k, areaProvider, settings),
                           )),
                     ],
                   ),
@@ -186,7 +277,7 @@ class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
     );
   }
 
-  Widget _buildKioskoCard(BuildContext context, KioskoFisico k, KioskoMedia? media, AreaProvider areaProvider, SettingsProvider settings) {
+  Widget _buildKioskoCard(BuildContext context, KioskoFisico k, AreaProvider areaProvider, SettingsProvider settings) {
     final areas = k.areaIds.map((id) {
       final a = areaProvider.areaById(id);
       return a?.nombre;
@@ -198,7 +289,7 @@ class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: () async {
-          await settings.setSelectedKioskoId(k.id, kioskoMediaId: k.kioskoMediaId, areaIds: k.areaIds, logoUrl: k.logoUrl, videoUrl: k.videoUrl, nombre: k.nombre);
+          await settings.setSelectedKioskoId(k.id, areaIds: k.areaIds, logoUrl: k.logoUrl, videoUrl: k.videoUrl, nombre: k.nombre);
           await _loadPrinterConfig(k.id);
           if (context.mounted) {
             Navigator.pushReplacementNamed(context, '/ticket');
@@ -217,7 +308,7 @@ class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
           ),
           child: Row(
             children: [
-                      _buildLogoPreview(media, kiosko: k),
+                      _buildLogoPreview(kiosko: k),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -297,8 +388,8 @@ class _KioskoSelectionScreenState extends State<KioskoSelectionScreen> {
     );
   }
 
-  Widget _buildLogoPreview(KioskoMedia? media, {KioskoFisico? kiosko}) {
-    final logoUrl = kiosko?.logoUrl ?? media?.logoUrl ?? '';
+  Widget _buildLogoPreview({KioskoFisico? kiosko}) {
+    final logoUrl = kiosko?.logoUrl ?? '';
     if (logoUrl.isEmpty) {
       return Container(
         width: 56,
